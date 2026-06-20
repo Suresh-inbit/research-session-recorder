@@ -86,7 +86,13 @@ export const Popup: React.FC = () => {
       {/* Actions */}
       <div style={{ padding: '0 16px 16px', display: 'flex', gap: '8px' }}>
         <Button variant="secondary" size="sm" style={{ flex: 1 }}
-          onClick={() => chrome.sidePanel?.open?.({}).catch(() => chrome.runtime.openOptionsPage?.())}>
+          onClick={() => {
+            chrome.windows.getCurrent().then((win) => {
+              if (win.id && chrome.sidePanel?.open) {
+                chrome.sidePanel.open({ windowId: win.id }).catch(() => chrome.runtime.openOptionsPage?.());
+              }
+            });
+          }}>
           📋 Side Panel
         </Button>
         <Button variant="secondary" size="sm" style={{ flex: 1 }}

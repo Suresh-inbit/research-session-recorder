@@ -94,9 +94,10 @@ export function extractDomain(url: string): string {
   }
 }
 
+import { EXCLUDED_URL_PATTERNS } from './constants';
+
 /** Check if a URL should be excluded from tracking */
 export function isExcludedUrl(url: string): boolean {
-  const { EXCLUDED_URL_PATTERNS } = require('./constants');
   return EXCLUDED_URL_PATTERNS.some((pattern: RegExp) => pattern.test(url));
 }
 

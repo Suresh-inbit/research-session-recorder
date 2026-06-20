@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useDashboardStats, useReport, useTheme, useNotes, useHighlights, useQuestions, usePages, useSessions } from '../hooks';
+import { useDashboardStats, useReport, useTheme, useNotes, useHighlights, useQuestions, usePages, useSessions, useGraphData } from '../hooks';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Tabs } from '../components/ui/Tabs';
 import { ThemeToggle } from '../components/ui/ThemeToggle';
 import { EmptyState } from '../components/ui/EmptyState';
+import { KnowledgeGraph } from '../components/graph/KnowledgeGraph';
 import { formatDuration, formatDate, downloadFile, truncate } from '../shared/utils';
 import { PAGE_TYPE_LABELS, PAGE_TYPE_COLORS } from '../shared/constants';
 import type { DashboardStats } from '../shared/messages';
@@ -14,6 +15,7 @@ import type { Page } from '../shared/types';
 const TABS = [
   { id: 'overview', label: 'Overview', icon: '📊' },
   { id: 'report', label: 'Daily Report', icon: '📋' },
+  { id: 'graph', label: 'Knowledge Graph', icon: '🕸️' },
   { id: 'export', label: 'Export', icon: '📦' },
 ];
 
@@ -22,6 +24,7 @@ export const Dashboard: React.FC = () => {
   const [period, setPeriod] = useState<'week' | 'month' | 'all'>('week');
   const { theme, toggle } = useTheme();
   const { data: stats, loading } = useDashboardStats(period);
+  const { data: graphData, loading: graphLoading } = useGraphData();
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-primary)', color: 'var(--text-primary)' }}>
@@ -59,6 +62,7 @@ export const Dashboard: React.FC = () => {
       <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '24px 32px' }}>
         {activeTab === 'overview' && <OverviewTab stats={stats} loading={loading} />}
         {activeTab === 'report' && <ReportTab />}
+        {activeTab === 'graph' && <KnowledgeGraph data={graphData} loading={graphLoading} />}
         {activeTab === 'export' && <ExportTab />}
       </main>
     </div>

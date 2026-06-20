@@ -39,7 +39,7 @@ export const Button: React.FC<ButtonProps> = ({
         else if (variant === 'ghost') (e.target as HTMLElement).style.background = 'var(--bg-hover)';
       }}
       onMouseLeave={(e) => {
-        (e.target as HTMLElement).style.background = variants[variant].background || '';
+        (e.target as HTMLElement).style.background = (variants[variant].background as string) || '';
       }}
       {...props}
     >
