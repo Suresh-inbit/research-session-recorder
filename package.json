@@ -1,0 +1,33 @@
+{
+  "name": "research-session-recorder",
+  "version": "1.0.0",
+  "description": "Chrome extension for tracking and organizing research sessions",
+  "type": "module",
+  "scripts": {
+    "dev": "vite build --watch",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "keywords": ["chrome-extension", "research", "productivity"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@xyflow/react": "^12.8.2",
+    "dagre": "^0.8.5",
+    "dexie": "^4.0.11",
+    "fuse.js": "^7.1.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.319",
+    "@types/dagre": "^0.7.52",
+    "@types/react": "^19.1.6",
+    "@types/react-dom": "^19.1.6",
+    "@types/uuid": "^10.0.0",
+    "@vitejs/plugin-react": "^4.5.2",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5"
+  }
+}
