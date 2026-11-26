@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Research Session Recorder",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Automatically track and organize your research sessions across papers, repositories, documentation, and more.",
   "permissions": [
     "sidePanel",

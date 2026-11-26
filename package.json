@@ -1,6 +1,6 @@
 {
   "name": "research-session-recorder",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Chrome extension for tracking and organizing research sessions",
   "type": "module",
   "scripts": {

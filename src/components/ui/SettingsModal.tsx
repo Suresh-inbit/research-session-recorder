@@ -10,6 +10,15 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
+/** Read from the manifest so the footer can't drift from the real version. */
+const version = (() => {
+  try {
+    return chrome.runtime.getManifest().version;
+  } catch {
+    return '';
+  }
+})();
+
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const { settings, updateSettings } = useSettings();
 
@@ -252,7 +261,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
         </div>
 
         <div style={{ padding: '8px 4px', fontSize: 'var(--text-xs)', color: 'var(--text-muted)', textAlign: 'center' }}>
-          Research Session Recorder v1.0.0 · Everything stays on this device (unencrypted browser storage)
+          Research Session Recorder v{version} · Everything stays on this device (unencrypted browser storage)
         </div>
       </div>
     </Modal>
