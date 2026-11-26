@@ -25,6 +25,9 @@ function manifestPlugin(browser: string): Plugin {
           default_panel: manifest.side_panel?.default_path || 'src/sidepanel/index.html',
         };
         delete manifest.side_panel;
+        // AMO requires a data-collection declaration. Nothing leaves the device, so "none".
+        manifest.browser_specific_settings.gecko.strict_min_version = '140.0';
+        manifest.browser_specific_settings.gecko.data_collection_permissions = { required: ['none'] };
         manifest.permissions = manifest.permissions.filter((p: string) => p !== 'sidePanel');
 
         // Chrome opens the panel from a custom command; Firefox has a built-in one.
