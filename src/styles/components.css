@@ -460,3 +460,14 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ---------- Toolbar popup ----------
+   A browser popup sizes itself to its content. The global `height: 100%` on html/body/#root would make the
+   content exactly as tall as the window it is in, so the popup would stay at its first (loading) size. */
+html.is-popup,
+html.is-popup body,
+html.is-popup #root {
+  width: auto;
+  height: auto;
+  min-height: 0;
+}
