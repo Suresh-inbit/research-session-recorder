@@ -4,17 +4,10 @@
 // All messages between background, content scripts, popup, and sidepanel
 // use this typed protocol for type-safe communication.
 
-import type { PageType, PageMetadata, Note, Highlight, Question, Session, Page, DailyReport, SearchResult, TimelineEvent } from './types';
+import type { PageMetadata, Session, Page, Note, Highlight, Question } from './types';
 
 // ---------- Content → Background ----------
-
-export interface PageVisitMessage {
-  type: 'PAGE_VISIT';
-  payload: {
-    url: string;
-    title: string;
-  };
-}
+// (Page visits are not reported by the content script: the background tracks tabs itself.)
 
 export interface PageMetadataMessage {
   type: 'PAGE_METADATA';
@@ -48,6 +41,7 @@ export interface SaveQuestionMessage {
   type: 'SAVE_QUESTION';
   payload: {
     content: string;
+    description?: string;
     type: 'question' | 'hypothesis' | 'idea';
     url?: string;
     pageTitle?: string;
@@ -142,11 +136,6 @@ export interface DeleteHighlightMessage {
   payload: { id: string };
 }
 
-export interface SearchMessage {
-  type: 'SEARCH';
-  payload: { query: string };
-}
-
 export interface GetTimelineMessage {
   type: 'GET_TIMELINE';
   payload?: {
@@ -165,13 +154,8 @@ export interface GetStatsMessage {
   payload?: { date?: string };
 }
 
-export interface ExportDataMessage {
-  type: 'EXPORT_DATA';
-  payload: {
-    format: 'markdown' | 'json' | 'csv' | 'obsidian';
-    sessionId?: string;
-    dateRange?: { start: string; end: string };
-  };
+export interface GetExportDataMessage {
+  type: 'GET_EXPORT_DATA';
 }
 
 export interface GetTopicsMessage {
@@ -186,6 +170,10 @@ export interface EndSessionMessage {
   type: 'END_SESSION';
 }
 
+export interface StartSessionMessage {
+  type: 'START_SESSION';
+}
+
 export interface GetDashboardStatsMessage {
   type: 'GET_DASHBOARD_STATS';
   payload?: {
@@ -196,7 +184,6 @@ export interface GetDashboardStatsMessage {
 // ---------- Union Type ----------
 
 export type ExtensionMessage =
-  | PageVisitMessage
   | PageMetadataMessage
   | SaveHighlightMessage
   | SaveNoteMessage
@@ -214,14 +201,14 @@ export type ExtensionMessage =
   | UpdateQuestionMessage
   | DeleteQuestionMessage
   | DeleteHighlightMessage
-  | SearchMessage
   | GetTimelineMessage
   | GetDailyReportMessage
   | GetStatsMessage
-  | ExportDataMessage
+  | GetExportDataMessage
   | GetTopicsMessage
   | GetGraphDataMessage
   | EndSessionMessage
+  | StartSessionMessage
   | GetDashboardStatsMessage;
 
 // ---------- Response Types ----------
@@ -258,6 +245,14 @@ export interface DashboardStats {
   streakDays: number;
   currentStreak: number;
   categoryBreakdown: { type: string; count: number; time: number }[];
+}
+
+export interface ExportData {
+  sessions: Session[];
+  pages: Page[];
+  notes: Note[];
+  highlights: Highlight[];
+  questions: Question[];
 }
 
 export interface GraphData {

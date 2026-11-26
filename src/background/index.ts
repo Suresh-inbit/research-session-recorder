@@ -1,41 +1,36 @@
 // ============================================================
 // Background Service Worker Entry
 // ============================================================
+// IMPORTANT (MV3): the worker is killed when idle and re-run from the top when an
+// event arrives. Every listener below must be registered synchronously at top level —
+// never inside an async callback or a one-time install handler.
 
-import { initSessionManager, handlePageVisit } from './session-manager';
+import { initSessionManager } from './session-manager';
 import { initTimeTracker } from './time-tracker';
-import { initContextMenu } from './context-menu';
+import { initContextMenu, createContextMenus } from './context-menu';
 import { initMessageHandler } from './message-handler';
+import { initCommands } from './commands';
+import { initAlarms } from './alarms';
 
-// Extension installed / updated
 chrome.runtime.onInstalled.addListener(async () => {
   console.log('[RSR] Extension installed/updated');
-  initContextMenu();
+  createContextMenus();
   await initSessionManager();
 
-  // Set side panel behavior — open on action click
+  // The toolbar button opens the popup (which links to the side panel), not the panel itself.
   try {
-    await chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
+    await chrome.sidePanel?.setPanelBehavior({ openPanelOnActionClick: false });
   } catch (e) {
     console.warn('[RSR] Side panel behavior not supported:', e);
   }
 });
 
-// Service worker startup
-chrome.runtime.onStartup.addListener(async () => {
-  console.log('[RSR] Service worker started');
-  await initSessionManager();
+chrome.runtime.onStartup.addListener(() => {
+  void initSessionManager();
 });
 
-// Initialize subsystems
-initTimeTracker();
+initContextMenu();
+initCommands();
 initMessageHandler();
-
-// Track tab navigation for auto-session creation
-chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'complete' && tab.url && tab.active) {
-    await handlePageVisit(tab.url, tab.title || tab.url);
-  }
-});
-
-console.log('[RSR] Background service worker loaded');
+initTimeTracker();
+initAlarms();

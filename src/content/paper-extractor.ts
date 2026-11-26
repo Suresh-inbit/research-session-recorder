@@ -15,15 +15,9 @@ export function extractPaperMetadata(url: string): PaperMetadata | null {
 function extractArxiv(): PaperMetadata {
   const meta: PaperMetadata = {};
 
-  // Title
-  const titleEl = document.querySelector('h1.title');
-  if (titleEl) {
-    meta.authors = undefined;
-    const text = titleEl.textContent || '';
+  // arXiv id comes from the URL path
+  if (document.querySelector('h1.title')) {
     meta.arxivId = window.location.pathname.replace(/^\/(abs|pdf)\//, '').replace(/\.pdf$/, '');
-    // Remove "Title:" prefix
-    const title = text.replace(/^Title:\s*/i, '').trim();
-    if (title) (meta as any)._title = title;
   }
 
   // Authors
@@ -58,9 +52,6 @@ function extractArxiv(): PaperMetadata {
 function extractOpenReview(): PaperMetadata {
   const meta: PaperMetadata = {};
 
-  const titleEl = document.querySelector('h2.citation_title') || document.querySelector('h4');
-  if (titleEl) (meta as any)._title = titleEl.textContent?.trim();
-
   const authorEls = document.querySelectorAll('.meta_row .note-authors a, .author-name');
   if (authorEls.length) {
     meta.authors = Array.from(authorEls).map(a => a.textContent?.trim() || '').filter(Boolean);
@@ -74,9 +65,6 @@ function extractOpenReview(): PaperMetadata {
 
 function extractCVF(): PaperMetadata {
   const meta: PaperMetadata = {};
-
-  const titleEl = document.querySelector('#papertitle');
-  if (titleEl) (meta as any)._title = titleEl.textContent?.trim();
 
   const authorsEl = document.querySelector('#authors');
   if (authorsEl) {

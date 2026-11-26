@@ -5,6 +5,32 @@
 import type { Session, Note, Highlight, Question, Page } from '../shared/types';
 import { formatDuration, formatDate, downloadFile } from '../shared/utils';
 
+/**
+ * Quote a CSV cell. Cells starting with = + - @ (or tab/CR) are prefixed with a quote so
+ * spreadsheet apps treat them as text instead of executing them as formulas.
+ */
+export function csvCell(value: string | number | undefined | null): string {
+  let text = value === undefined || value === null ? '' : String(value);
+  if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`;
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+/** Make a page title safe to use inside an Obsidian [[wikilink]]. */
+export function wikiLink(title: string | undefined, fallback = 'Untitled'): string {
+  const cleaned = (title ?? '').replace(/[[\]|#^\\/:]/g, ' ').replace(/\s+/g, ' ').trim();
+  return `[[${cleaned || fallback}]]`;
+}
+
+/** Escape characters that would break a Markdown link label. */
+export function mdLabel(text: string): string {
+  return text.replace(/[[\]]/g, '\\$&');
+}
+
+/** Wrap a URL for Markdown link syntax (parentheses would end the link early). */
+export function mdUrl(url: string | undefined): string {
+  return (url ?? '').replace(/\(/g, '%28').replace(/\)/g, '%29').replace(/\s/g, '%20');
+}
+
 export const exportService = {
   exportToMarkdown(sessions: Session[], notes: Note[], highlights: Highlight[], questions: Question[]) {
     let md = `# Research Session Export\n\n_Exported on ${new Date().toLocaleDateString()}_\n\n`;
@@ -25,7 +51,7 @@ export const exportService = {
       md += `## Notes (${notes.length})\n\n`;
       notes.forEach(n => {
         md += `### Note\n${n.content}\n\n`;
-        if (n.pageTitle) md += `* **Source**: [${n.pageTitle}](${n.url})\n`;
+        if (n.pageTitle) md += `* **Source**: [${mdLabel(n.pageTitle)}](${mdUrl(n.url)})\n`;
         md += `* **Created**: ${new Date(n.createdAt).toLocaleString()}\n`;
         if (n.tags.length) md += `* **Tags**: ${n.tags.join(', ')}\n`;
         md += '\n---\n\n';
@@ -36,7 +62,7 @@ export const exportService = {
       md += `## Highlights (${highlights.length})\n\n`;
       highlights.forEach(h => {
         md += `> ${h.text}\n\n`;
-        md += `— From [${h.pageTitle}](${h.url}) at ${new Date(h.createdAt).toLocaleString()}\n\n`;
+        md += `— From [${mdLabel(h.pageTitle)}](${mdUrl(h.url)}) at ${new Date(h.createdAt).toLocaleString()}\n\n`;
       });
     }
 
@@ -45,7 +71,7 @@ export const exportService = {
       questions.forEach(q => {
         md += `### ${q.type.toUpperCase()}: ${q.content}\n`;
         md += `- **Status**: ${q.status}\n`;
-        if (q.pageTitle) md += `- **Source**: [${q.pageTitle}](${q.url})\n`;
+        if (q.pageTitle) md += `- **Source**: [${mdLabel(q.pageTitle)}](${mdUrl(q.url)})\n`;
         md += `- **Created**: ${new Date(q.createdAt).toLocaleString()}\n\n`;
       });
     }
@@ -63,27 +89,28 @@ export const exportService = {
   },
 
   exportToCSV(notes: Note[], highlights: Highlight[], questions: Question[]) {
-    let csv = 'Type,Content,URL,Source Title,Timestamp,Additional Info\n';
+    const rows: string[] = ['Type,Content,URL,Source Title,Timestamp,Additional Info'];
 
-    notes?.forEach(n => {
-      const escapedContent = n.content.replace(/"/g, '""');
-      const escapedTitle = (n.pageTitle || '').replace(/"/g, '""');
-      csv += `note,"${escapedContent}","${n.url || ''}","${escapedTitle}",${new Date(n.createdAt).toISOString()},"Tags: ${n.tags.join('; ')}"\n`;
-    });
+    notes?.forEach((n) =>
+      rows.push([
+        csvCell('note'), csvCell(n.content), csvCell(n.url), csvCell(n.pageTitle),
+        csvCell(new Date(n.createdAt).toISOString()), csvCell(`Tags: ${n.tags.join('; ')}`),
+      ].join(','))
+    );
+    highlights?.forEach((h) =>
+      rows.push([
+        csvCell('highlight'), csvCell(h.text), csvCell(h.url), csvCell(h.pageTitle),
+        csvCell(new Date(h.createdAt).toISOString()), csvCell(''),
+      ].join(','))
+    );
+    questions?.forEach((q) =>
+      rows.push([
+        csvCell(q.type), csvCell(q.content), csvCell(q.url), csvCell(q.pageTitle),
+        csvCell(new Date(q.createdAt).toISOString()), csvCell(`Status: ${q.status}`),
+      ].join(','))
+    );
 
-    highlights?.forEach(h => {
-      const escapedText = h.text.replace(/"/g, '""');
-      const escapedTitle = h.pageTitle.replace(/"/g, '""');
-      csv += `highlight,"${escapedText}","${h.url}","${escapedTitle}",${new Date(h.createdAt).toISOString()},\n`;
-    });
-
-    questions?.forEach(q => {
-      const escapedContent = q.content.replace(/"/g, '""');
-      const escapedTitle = (q.pageTitle || '').replace(/"/g, '""');
-      csv += `${q.type},"${escapedContent}","${q.url || ''}","${escapedTitle}",${new Date(q.createdAt).toISOString()},"Status: ${q.status}"\n`;
-    });
-
-    downloadFile(csv, `research-export-${formatDate(Date.now())}.csv`, 'text/csv');
+    downloadFile(rows.join('\n') + '\n', `research-export-${formatDate(Date.now())}.csv`, 'text/csv');
   },
 
   exportToObsidian(notes: Note[], highlights: Highlight[], questions: Question[]) {
@@ -93,7 +120,7 @@ export const exportService = {
       md += `## Notes\n\n`;
       notes.forEach(n => {
         md += `### Note\n${n.content}\n\n`;
-        if (n.pageTitle) md += `Source: [[${n.pageTitle}]]\nSource URL: ${n.url}\n`;
+        if (n.pageTitle) md += `Source: ${wikiLink(n.pageTitle)}\nSource URL: ${n.url}\n`;
         if (n.tags.length) md += `Tags: ${n.tags.map(t => `#${t}`).join(' ')}\n`;
         md += '\n';
       });
@@ -103,7 +130,7 @@ export const exportService = {
       md += `## Highlights\n\n`;
       highlights.forEach(h => {
         md += `> ${h.text}\n\n`;
-        md += `Source: [[${h.pageTitle}]]\nSource URL: ${h.url}\n\n`;
+        md += `Source: ${wikiLink(h.pageTitle)}\nSource URL: ${h.url}\n\n`;
       });
     }
 
@@ -112,7 +139,7 @@ export const exportService = {
       questions.forEach(q => {
         md += `### ${q.type.toUpperCase()}: ${q.content}\n`;
         md += `- Status: #${q.status}\n`;
-        if (q.pageTitle) md += `- Source: [[${q.pageTitle}]]\n`;
+        if (q.pageTitle) md += `- Source: ${wikiLink(q.pageTitle)}\n`;
         md += '\n';
       });
     }

@@ -16,6 +16,25 @@ const STOP_WORDS = new Set([
   'http', 'https', 'www', 'arxiv', 'org', 'pdf', 'abs', 'paper', 'research',
 ]);
 
+/** Tokenize text into meaningful lowercase words. */
+function tokenize(text: string): string[] {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .split(/\s+/)
+    .filter((w) => w.length > 2 && !STOP_WORDS.has(w));
+}
+
+/** The `limit` most frequent meaningful words in `text`. */
+export function extractKeywords(text: string, limit = 10): string[] {
+  const freq = new Map<string, number>();
+  for (const w of tokenize(text)) freq.set(w, (freq.get(w) || 0) + 1);
+  return Array.from(freq.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([w]) => w);
+}
+
 /**
  * Extracts key topics and subtopics from page titles, notes, and highlights.
  * It detects single keywords and multi-word phrases (bigrams/trigrams).
@@ -47,7 +66,7 @@ export function extractTopics(text: string): { topic: string; subtopics: string[
   // Sort bigrams and pick top ones
   const sortedBigrams = Array.from(bigramFreq.entries())
     .sort((a, b) => b[1] - a[1])
-    .filter(([phrase, freq]) => freq > 1);
+    .filter(([, freq]) => freq > 1);
 
   // Group single words as subtopics under key phrases or dominant words
   const result: { topic: string; subtopics: string[] }[] = [];
@@ -57,8 +76,6 @@ export function extractTopics(text: string): { topic: string; subtopics: string[
   
   for (const [phrase] of sortedBigrams.slice(0, 5)) {
     const phraseWords = phrase.split(' ');
-    // Find related subtopics: words that often co-occur in the list but are not part of the phrase itself
-    const subtopics: string[] = [];
     phraseWords.forEach(w => usedWords.add(w));
 
     // Find other frequent words related to this topic contextually

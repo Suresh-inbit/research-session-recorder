@@ -3,7 +3,8 @@
 // ============================================================
 // Classifies URLs into research page categories using pattern matching.
 
-import { PAGE_CLASSIFICATION_RULES, EXCLUDED_URL_PATTERNS } from '../shared/constants';
+import { PAGE_CLASSIFICATION_RULES } from '../shared/constants';
+import { isExcludedUrl } from '../shared/url-rules';
 import type { PageType } from '../shared/types';
 
 export interface ClassificationResult {
@@ -34,13 +35,6 @@ export function classifyPage(url: string): ClassificationResult {
 }
 
 /**
- * Check if a URL should be excluded from tracking.
- */
-export function isExcludedUrl(url: string): boolean {
-  return EXCLUDED_URL_PATTERNS.some((pattern) => pattern.test(url));
-}
-
-/**
  * Check if a URL is a research-relevant page (not unknown and not excluded).
  */
 export function isResearchPage(url: string): boolean {
@@ -62,7 +56,7 @@ export function cleanPageTitle(title: string, url: string): string {
     / · GitHub$/,
     / - GitHub$/,
     / \| Hacker News$/,
-    / : [\w\s]+$/,  // Stack Overflow suffixes
+    / - Stack Overflow$/,
     / \| Reddit$/,
     / - arXiv$/,
     / \| OpenReview$/,

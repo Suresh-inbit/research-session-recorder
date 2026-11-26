@@ -29,7 +29,13 @@ export const sessionRepo = {
   },
 
   async getActive(): Promise<Session | undefined> {
-    return db.sessions.where('isActive').equals(1).first();
+    // Booleans are not valid IndexedDB keys, so this can't use an index.
+    // Newest-first means we stop at the first (normally only) active session.
+    return db.sessions
+      .orderBy('startTime')
+      .reverse()
+      .filter((s) => s.isActive)
+      .first();
   },
 
   async getAll(limit = 50, offset = 0): Promise<Session[]> {
@@ -52,11 +58,11 @@ export const sessionRepo = {
     await db.sessions.update(id, changes);
   },
 
-  async endSession(id: string): Promise<void> {
+  async endSession(id: string, endTime: number = Date.now()): Promise<void> {
     const session = await db.sessions.get(id);
     if (!session) return;
 
-    const endTime = Date.now();
+    endTime = Math.max(endTime, session.startTime);
     const duration = Math.floor((endTime - session.startTime) / 1000);
 
     // Count related entities

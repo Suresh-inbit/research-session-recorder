@@ -2,7 +2,7 @@
 // Dexie Database Singleton
 // ============================================================
 
-import Dexie, { type Table } from 'dexie';
+import Dexie, { type Table, type Transaction } from 'dexie';
 import type {
   Session,
   Page,
@@ -27,8 +27,8 @@ export class ResearchDatabase extends Dexie {
   dailyReports!: Table<DailyReport, string>;
   timelineEvents!: Table<TimelineEvent, string>;
 
-  constructor() {
-    super(DB_NAME);
+  constructor(name: string = DB_NAME) {
+    super(name);
 
     this.version(1).stores({
       sessions: 'id, startTime, endTime, isActive',
@@ -40,6 +40,31 @@ export class ResearchDatabase extends Dexie {
       relationships: 'id, sourceId, targetId, sourceType, targetType, relationType',
       dailyReports: 'id, date, createdAt',
       timelineEvents: 'id, sessionId, timestamp, type, entityType',
+    });
+
+    // v2: `isActive` is a boolean, and IndexedDB cannot index booleans, so the old
+    // `isActive` index was always empty and "get the active session" never found
+    // anything. Drop the index and close every session that was left dangling.
+    this.version(2)
+      .stores({ sessions: 'id, startTime, endTime' })
+      .upgrade(closeOrphanedSessions);
+  }
+}
+
+/** Close sessions still flagged active, ending them at their last known page activity. */
+export async function closeOrphanedSessions(tx: Transaction): Promise<void> {
+  const sessions = tx.table<Session, string>('sessions');
+  const pages = tx.table<Page, string>('pages');
+
+  const orphans = await sessions.filter((s) => s.isActive === true).toArray();
+  for (const s of orphans) {
+    const sessionPages = await pages.where('sessionId').equals(s.id).toArray();
+    const endTime = sessionPages.reduce((max, p) => Math.max(max, p.lastActiveAt ?? 0), s.startTime);
+    await sessions.update(s.id, {
+      endTime,
+      duration: Math.max(0, Math.floor((endTime - s.startTime) / 1000)),
+      pageCount: sessionPages.length,
+      isActive: false,
     });
   }
 }

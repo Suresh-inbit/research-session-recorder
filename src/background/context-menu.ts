@@ -1,74 +1,50 @@
 // ============================================================
 // Context Menu
 // ============================================================
-// Sets up the right-click context menu for saving highlights.
+// Right-click menu for saving the current selection.
+// Menu *items* are created once on install; the click *listener* must be registered
+// on every worker start (top level), or clicks are lost after the worker restarts.
 
-import { CONTEXT_MENU_SAVE_HIGHLIGHT } from '../shared/constants';
-import { highlightRepo } from '../db/repositories/highlight-repo';
-import { getCurrentSessionId } from './session-manager';
-import { pageRepo } from '../db/repositories/page-repo';
-import { generateId } from '../shared/utils';
-import { db } from '../db/database';
+import { CONTEXT_MENU_SAVE_HIGHLIGHT, CONTEXT_MENU_SAVE_NOTE } from '../shared/constants';
+import { saveHighlight, saveNote } from './capture';
 
-/**
- * Initialize context menus — called on extension install.
- */
-export function initContextMenu(): void {
-  chrome.contextMenus.create({
-    id: CONTEXT_MENU_SAVE_HIGHLIGHT,
-    title: 'Save to Research Notes',
-    contexts: ['selection'],
+/** Create the menu items — call from onInstalled. */
+export function createContextMenus(): void {
+  chrome.contextMenus.removeAll(() => {
+    chrome.contextMenus.create({
+      id: CONTEXT_MENU_SAVE_HIGHLIGHT,
+      title: 'Save as Highlight',
+      contexts: ['selection'],
+    });
+    chrome.contextMenus.create({
+      id: CONTEXT_MENU_SAVE_NOTE,
+      title: 'Create Note from Selection',
+      contexts: ['selection'],
+    });
   });
-
-  chrome.contextMenus.onClicked.addListener(handleContextMenuClick);
 }
 
-/**
- * Handle context menu item clicks.
- */
+/** Register the click listener — call synchronously at worker start-up. */
+export function initContextMenu(): void {
+  chrome.contextMenus.onClicked.addListener((info, tab) => {
+    void handleContextMenuClick(info, tab).catch((err) => console.error('[RSR] context menu failed:', err));
+  });
+}
+
 async function handleContextMenuClick(
   info: chrome.contextMenus.OnClickData,
   tab?: chrome.tabs.Tab
 ): Promise<void> {
-  if (info.menuItemId !== CONTEXT_MENU_SAVE_HIGHLIGHT) return;
+  if (info.menuItemId !== CONTEXT_MENU_SAVE_HIGHLIGHT && info.menuItemId !== CONTEXT_MENU_SAVE_NOTE) return;
   if (!info.selectionText || !tab?.url) return;
 
-  const sessionId = getCurrentSessionId();
-  if (!sessionId) return;
-
-  // Find or infer the page record
-  let page = await pageRepo.getByUrl(tab.url, sessionId);
-  let pageId = page?.id || generateId();
-
-  // If no page exists yet, we don't create one here — the session manager handles that.
-  // But we still need a pageId for the highlight.
-  if (!page) {
-    // Use a placeholder — the page may be tracked later
-    pageId = 'untracked-' + generateId();
+  const pageTitle = tab.title || tab.url;
+  if (info.menuItemId === CONTEXT_MENU_SAVE_HIGHLIGHT) {
+    await saveHighlight({ text: info.selectionText, url: tab.url, pageTitle });
+  } else {
+    await saveNote({ content: info.selectionText, url: tab.url, pageTitle });
   }
 
-  // Save the highlight
-  const highlight = await highlightRepo.create({
-    pageId: page?.id || pageId,
-    sessionId,
-    text: info.selectionText,
-    url: tab.url,
-    pageTitle: tab.title || tab.url,
-  });
-
-  // Create timeline event
-  await db.timelineEvents.add({
-    id: generateId(),
-    timestamp: Date.now(),
-    type: 'highlight_saved',
-    title: `Highlighted: "${info.selectionText.slice(0, 80)}${info.selectionText.length > 80 ? '...' : ''}"`,
-    url: tab.url,
-    entityId: highlight.id,
-    entityType: 'highlight',
-    sessionId,
-  });
-
-  // Show a brief notification badge
   try {
     await chrome.action.setBadgeText({ text: '✓' });
     await chrome.action.setBadgeBackgroundColor({ color: '#34d399' });

@@ -8,8 +8,8 @@
     "contextMenus",
     "storage",
     "tabs",
-    "activeTab",
-    "idle"
+    "idle",
+    "alarms"
   ],
   "background": {
     "service_worker": "background.js",
@@ -19,12 +19,12 @@
   "browser_specific_settings": {
     "gecko": {
       "id": "research-session-recorder@example.com",
-      "strict_min_version": "109.0"
+      "strict_min_version": "121.0"
     }
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": ["http://*/*", "https://*/*"],
       "js": ["content.js"],
       "run_at": "document_idle"
     }
@@ -49,15 +49,13 @@
   "commands": {
     "toggle-note": {
       "suggested_key": {
-        "default": "Ctrl+Shift+N",
-        "mac": "Command+Shift+N"
+        "default": "Alt+Shift+N"
       },
       "description": "Toggle quick note on current page"
     },
-    "_execute_side_panel": {
+    "open-side-panel": {
       "suggested_key": {
-        "default": "Ctrl+Shift+R",
-        "mac": "Command+Shift+R"
+        "default": "Alt+Shift+R"
       },
       "description": "Open Research Side Panel"
     }

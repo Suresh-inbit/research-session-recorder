@@ -5,67 +5,79 @@
 import { extractPageMetadata } from './metadata-extractor';
 import { extractPaperMetadata } from './paper-extractor';
 import { extractGitHubMetadata } from './github-extractor';
-import { initHighlightCapture } from './highlight-capture';
+import { initHighlightCapture, disableHighlightCapture } from './highlight-capture';
 
-// Notify background of page visit
-chrome.runtime.sendMessage({
-  type: 'PAGE_VISIT',
-  payload: {
-    url: window.location.href,
-    title: document.title,
-  },
-});
+// Page visits are tracked by the background worker (tab events), not reported from here.
+
+import type { Settings } from '../shared/types';
+import { SETTINGS_KEY, normalizeSettings } from '../shared/settings';
+import { isExcludedUrl } from '../shared/url-rules';
+
+/**
+ * Send extracted metadata to the background. The page record may not exist yet (the
+ * background creates it when the tab finishes loading), so retry a few times.
+ */
+function sendMetadata(metadata: object, attempt = 0): void {
+  const url = window.location.href;
+  chrome.runtime.sendMessage({ type: 'PAGE_METADATA', payload: { url, metadata } }, (response) => {
+    const failed = chrome.runtime.lastError || !response?.success;
+    if (failed && attempt < 3) setTimeout(() => sendMetadata(metadata, attempt + 1), 2000);
+  });
+}
 
 // Extract and send metadata based on page type
 function extractAndSendMetadata(): void {
   const url = window.location.href;
-  const pageMeta = extractPageMetadata();
-
-  // Paper metadata
   const paperMeta = extractPaperMetadata(url);
-  if (paperMeta) {
-    chrome.runtime.sendMessage({
-      type: 'PAGE_METADATA',
-      payload: { url, metadata: paperMeta },
-    });
+  if (paperMeta) sendMetadata(paperMeta);
+  const ghMeta = extractGitHubMetadata(url);
+  if (ghMeta) sendMetadata(ghMeta);
+}
+
+// ---------- Settings-driven behaviour ----------
+// Excluded/blocked sites (webmail, banking, user blocklist...) get no UI and no metadata.
+
+let siteAllowed = false;
+let metadataSent = false;
+
+function applySettings(settings: Settings): void {
+  siteAllowed = !isExcludedUrl(window.location.href, settings.blockedDomains);
+
+  if (siteAllowed && settings.highlightEnabled) {
+    initHighlightCapture();
+  } else {
+    disableHighlightCapture();
   }
 
-  // GitHub metadata
-  const ghMeta = extractGitHubMetadata(url);
-  if (ghMeta) {
-    chrome.runtime.sendMessage({
-      type: 'PAGE_METADATA',
-      payload: { url, metadata: ghMeta },
-    });
+  if (!siteAllowed && noteWidget) toggleNoteWidget();
+
+  if (siteAllowed && !metadataSent) {
+    metadataSent = true;
+    // Small delay so the DOM (and the background's page record) is ready
+    setTimeout(extractAndSendMetadata, 1000);
   }
 }
 
-// Initialize highlight capture
-initHighlightCapture();
+chrome.storage.local.get(SETTINGS_KEY, (result) => {
+  applySettings(normalizeSettings(result[SETTINGS_KEY]));
+});
 
-// Extract metadata after a small delay to ensure DOM is ready
-setTimeout(extractAndSendMetadata, 1000);
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'local' && changes[SETTINGS_KEY]) {
+    applySettings(normalizeSettings(changes[SETTINGS_KEY].newValue));
+  }
+});
 
 // Listen for messages from background
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  if (message.type === 'GET_PAGE_METADATA') {
-    const meta = extractPageMetadata();
-    sendResponse({ success: true, data: meta });
-  }
-  if (message.type === 'TOGGLE_NOTE_WIDGET') {
+  if (!siteAllowed) return false;
+  if (message?.type === 'GET_PAGE_METADATA') {
+    sendResponse({ success: true, data: extractPageMetadata() });
+  } else if (message?.type === 'TOGGLE_NOTE_WIDGET') {
     toggleNoteWidget();
     sendResponse({ success: true });
   }
-  return true;
-});
-
-// Keyboard shortcut handler
-document.addEventListener('keydown', (e) => {
-  // Ctrl+Shift+N — toggle note widget
-  if (e.ctrlKey && e.shiftKey && e.key === 'N') {
-    e.preventDefault();
-    toggleNoteWidget();
-  }
+  return false; // all responses above are synchronous
 });
 
 // ---------- Inline Note Widget ----------
@@ -178,7 +190,7 @@ function toggleNoteWidget(): void {
     } else {
       chrome.runtime.sendMessage({
         type: 'SAVE_QUESTION',
-        payload: { content, type: noteType as any, url: window.location.href, pageTitle: document.title },
+        payload: { content, type: noteType as 'question' | 'hypothesis' | 'idea', url: window.location.href, pageTitle: document.title },
       });
     }
 

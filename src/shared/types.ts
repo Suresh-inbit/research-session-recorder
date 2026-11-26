@@ -15,8 +15,15 @@ export type PageType =
 export type QuestionType = 'question' | 'hypothesis' | 'idea';
 export type QuestionStatus = 'open' | 'answered' | 'archived';
 export type EntityType = 'page' | 'note' | 'highlight' | 'question' | 'topic' | 'session';
-export type RelationType = 'references' | 'related_to' | 'derived_from' | 'part_of' | 'answers';
+export type RelationType = 'references' | 'related_to' | 'derived_from' | 'part_of' | 'answers' | 'navigated_from';
 export type Theme = 'dark' | 'light';
+
+export interface Settings {
+  trackingEnabled: boolean;
+  highlightEnabled: boolean;
+  /** Extra domains (e.g. "intranet.example.com") that are never tracked or annotated. */
+  blockedDomains: string[];
+}
 
 export interface PaperMetadata {
   authors?: string[];
@@ -91,6 +98,7 @@ export interface Question {
   pageId?: string;
   sessionId: string;
   content: string;
+  description?: string;
   type: QuestionType;
   status: QuestionStatus;
   url?: string;

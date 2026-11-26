@@ -17,11 +17,12 @@ export const SEARCH_THRESHOLD = 0.35;
 /** Database name */
 export const DB_NAME = 'ResearchSessionRecorderDB';
 
-/** Database version */
-export const DB_VERSION = 1;
+/** Placeholder session/page id for items saved while nothing was being tracked */
+export const UNTRACKED_ID = 'untracked';
 
-/** Context menu ID */
+/** Context menu IDs */
 export const CONTEXT_MENU_SAVE_HIGHLIGHT = 'save-to-research-notes';
+export const CONTEXT_MENU_SAVE_NOTE = 'save-as-note';
 
 /** Page type classification rules (order matters — first match wins) */
 export const PAGE_CLASSIFICATION_RULES: Array<{
@@ -79,46 +80,39 @@ export const PAGE_CLASSIFICATION_RULES: Array<{
   { pattern: /blog\.[^.]+\.(com|org|io)/, type: 'blog', confidence: 0.70 },
 ];
 
-/** URLs to exclude from tracking */
-export const EXCLUDED_URL_PATTERNS: RegExp[] = [
-  /^chrome:\/\//,
-  /^chrome-extension:\/\//,
-  /^about:/,
-  /^edge:\/\//,
-  /^brave:\/\//,
-  /google\.com\/search/,
-  /bing\.com\/search/,
-  /duckduckgo\.com\//,
-  /mail\.google\.com/,
-  /outlook\.live\.com/,
-  /web\.whatsapp\.com/,
-  /facebook\.com/,
-  /twitter\.com|x\.com/,
-  /instagram\.com/,
-  /netflix\.com/,
-  /spotify\.com/,
-];
-
 /** Page type display labels */
 export const PAGE_TYPE_LABELS: Record<import('./types').PageType, string> = {
-  paper: '📄 Paper',
-  repository: '💻 Repository',
-  documentation: '📖 Documentation',
-  video: '🎬 Video',
-  blog: '✏️ Blog Post',
-  forum: '💬 Discussion',
-  dataset: '📊 Dataset',
-  unknown: '🔗 Page',
+  paper: 'Paper',
+  repository: 'Repository',
+  documentation: 'Documentation',
+  video: 'Video',
+  blog: 'Blog Post',
+  forum: 'Discussion',
+  dataset: 'Dataset',
+  unknown: 'Page',
+};
+
+/** Page type icons (Flaticon classes) */
+export const PAGE_TYPE_ICONS: Record<import('./types').PageType, string> = {
+  paper: 'fi fi-rr-document',
+  repository: 'fi fi-rr-code-branch',
+  documentation: 'fi fi-rr-book',
+  video: 'fi fi-rr-play-alt',
+  blog: 'fi fi-rr-edit',
+  forum: 'fi fi-rr-comments',
+  dataset: 'fi fi-rr-chart-pie-alt',
+  unknown: 'fi fi-rr-link',
 };
 
 /** Page type colors (for badges/charts) */
 export const PAGE_TYPE_COLORS: Record<import('./types').PageType, string> = {
-  paper: '#7c5cfc',
-  repository: '#38bdf8',
-  documentation: '#34d399',
-  video: '#f87171',
-  blog: '#fbbf24',
-  forum: '#a78bfa',
-  dataset: '#fb923c',
-  unknown: '#6b7084',
+  // CSS variables (design-tokens.css) so the colours adapt to the light theme.
+  paper: 'var(--color-paper)',
+  repository: 'var(--color-repository)',
+  documentation: 'var(--color-documentation)',
+  video: 'var(--color-video)',
+  blog: 'var(--color-blog)',
+  forum: 'var(--color-forum)',
+  dataset: 'var(--color-dataset)',
+  unknown: 'var(--color-unknown)',
 };

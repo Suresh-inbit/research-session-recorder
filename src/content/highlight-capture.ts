@@ -7,10 +7,27 @@ let floatingButton: HTMLElement | null = null;
 
 export function initHighlightCapture(): void {
   document.addEventListener('mouseup', handleMouseUp);
-  document.addEventListener('mousedown', hideFloatingButton);
+  document.addEventListener('mousedown', handleMouseDown);
+}
+
+export function disableHighlightCapture(): void {
+  document.removeEventListener('mouseup', handleMouseUp);
+  document.removeEventListener('mousedown', handleMouseDown);
+  hideFloatingButton();
+}
+
+function isInsideFloatingButton(target: EventTarget | null): boolean {
+  return !!floatingButton && target instanceof Node && floatingButton.contains(target);
+}
+
+function handleMouseDown(e: MouseEvent): void {
+  // Pressing the button itself must not remove it before its click fires.
+  if (isInsideFloatingButton(e.target)) return;
+  hideFloatingButton();
 }
 
 function handleMouseUp(e: MouseEvent): void {
+  if (isInsideFloatingButton(e.target)) return;
   // Small delay to ensure selection is finalized
   setTimeout(() => {
     const selection = window.getSelection();

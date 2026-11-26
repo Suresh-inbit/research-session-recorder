@@ -26,10 +26,12 @@ export function formatTime(timestamp: number): string {
   });
 }
 
-/** Format a timestamp into date string (YYYY-MM-DD) */
+/** Format a timestamp into a local-time date string (YYYY-MM-DD) */
 export function formatDate(timestamp: number): string {
   const d = new Date(timestamp);
-  return d.toISOString().split('T')[0];
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${mm}-${dd}`;
 }
 
 /** Format a timestamp into a relative time string */
@@ -94,11 +96,28 @@ export function extractDomain(url: string): string {
   }
 }
 
-import { EXCLUDED_URL_PATTERNS } from './constants';
+/** Open a URL in a new browser tab (falls back to window.open outside the extension). */
+export function openUrl(url: string): void {
+  if (chrome.tabs?.create) void chrome.tabs.create({ url });
+  else window.open(url, '_blank');
+}
 
-/** Check if a URL should be excluded from tracking */
-export function isExcludedUrl(url: string): boolean {
-  return EXCLUDED_URL_PATTERNS.some((pattern: RegExp) => pattern.test(url));
+/** Open one of the extension's own pages (e.g. 'src/dashboard/index.html') in a new tab. */
+export function openExtensionPage(path: string): void {
+  openUrl(chrome.runtime?.getURL ? chrome.runtime.getURL(path) : path);
+}
+
+/** Open the side panel (Chrome) / sidebar (Firefox) for the current window. */
+export async function openSidePanel(): Promise<void> {
+  const firefox = (globalThis as { browser?: { sidebarAction?: { open: () => Promise<void> } } }).browser;
+  if (firefox?.sidebarAction) {
+    await firefox.sidebarAction.open();
+    return;
+  }
+  const win = await chrome.windows.getCurrent();
+  if (chrome.sidePanel?.open && win.id !== undefined) {
+    await chrome.sidePanel.open({ windowId: win.id });
+  }
 }
 
 /** Send a message to the background service worker */

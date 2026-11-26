@@ -59,26 +59,22 @@ export const pageRepo = {
   },
 
   async incrementActiveTime(id: string, seconds: number): Promise<void> {
-    const page = await db.pages.get(id);
-    if (!page) return;
-    await db.pages.update(id, {
-      activeTimeSeconds: page.activeTimeSeconds + seconds,
-      lastActiveAt: Date.now(),
-    });
+    // modify() runs read+write in one transaction, so concurrent increments don't lose updates.
+    await db.pages
+      .where('id')
+      .equals(id)
+      .modify((page) => {
+        page.activeTimeSeconds += seconds;
+        page.lastActiveAt = Date.now();
+      });
   },
 
   async getTopByActiveTime(limit = 10, type?: PageType): Promise<Page[]> {
-    let collection = db.pages.orderBy('activeTimeSeconds');
-    if (type) {
-      const pages = await db.pages
-        .where('type')
-        .equals(type)
-        .toArray();
-      return pages
-        .sort((a, b) => b.activeTimeSeconds - a.activeTimeSeconds)
-        .slice(0, limit);
-    }
-    return collection.reverse().limit(limit).toArray();
+    // `activeTimeSeconds` is not indexed, so sort in memory.
+    const pages = type
+      ? await db.pages.where('type').equals(type).toArray()
+      : await db.pages.toArray();
+    return pages.sort((a, b) => b.activeTimeSeconds - a.activeTimeSeconds).slice(0, limit);
   },
 
   async getVisitedToday(startOfDay: number): Promise<Page[]> {

@@ -69,6 +69,13 @@ export const questionRepo = {
     await db.questions.delete(id);
   },
 
+  async getByDateRange(startDate: number, endDate: number): Promise<Question[]> {
+    return db.questions
+      .where('createdAt')
+      .between(startDate, endDate, true, true)
+      .toArray();
+  },
+
   async count(startDate?: number): Promise<number> {
     if (startDate) {
       return db.questions.where('createdAt').aboveOrEqual(startDate).count();
