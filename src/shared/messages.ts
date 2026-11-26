@@ -234,6 +234,8 @@ export interface StatsData {
 export interface DashboardStats {
   totalResearchHours: number;
   totalSessions: number;
+  /** Pages visited in the selected window (all types). */
+  totalPages: number;
   totalNotes: number;
   totalHighlights: number;
   totalQuestions: number;

@@ -11,6 +11,24 @@ export interface DayBucket {
   pages: number;
 }
 
+export interface CategoryStat {
+  type: string;
+  count: number;
+  time: number;
+}
+
+/** Pages and active seconds per page type — every type, including `unknown`, most time first. */
+export function buildCategoryBreakdown(pages: Array<Pick<Page, 'type' | 'activeTimeSeconds'>>): CategoryStat[] {
+  const byType = new Map<string, CategoryStat>();
+  for (const p of pages) {
+    const entry = byType.get(p.type) ?? { type: p.type, count: 0, time: 0 };
+    entry.count += 1;
+    entry.time += p.activeTimeSeconds;
+    byType.set(p.type, entry);
+  }
+  return Array.from(byType.values()).sort((a, b) => b.time - a.time || b.count - a.count);
+}
+
 /** Local-time start of the day `daysAgo` days before `now`. DST-safe (uses calendar arithmetic). */
 export function startOfDayDaysAgo(daysAgo: number, now: number = Date.now()): number {
   const d = new Date(now);

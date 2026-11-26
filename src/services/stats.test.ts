@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildDailyBuckets, computeStreak, startOfDayDaysAgo } from './stats';
+import { buildCategoryBreakdown, buildDailyBuckets, computeStreak, startOfDayDaysAgo } from './stats';
 import { formatDate } from '../shared/utils';
 
 // Local noon, so day arithmetic is unambiguous in any timezone.
@@ -49,5 +49,22 @@ describe('computeStreak', () => {
   it('is 0 when neither today nor yesterday has activity', () => {
     expect(computeStreak(new Set([day(2)]), NOW)).toBe(0);
     expect(computeStreak(new Set(), NOW)).toBe(0);
+  });
+});
+
+describe('buildCategoryBreakdown', () => {
+  it('includes unknown pages and sorts by time spent', () => {
+    const out = buildCategoryBreakdown([
+      { type: 'paper', activeTimeSeconds: 100 },
+      { type: 'unknown', activeTimeSeconds: 300 },
+      { type: 'unknown', activeTimeSeconds: 50 },
+      { type: 'repository', activeTimeSeconds: 10 },
+    ]);
+    expect(out.map((c) => c.type)).toEqual(['unknown', 'paper', 'repository']);
+    expect(out[0]).toEqual({ type: 'unknown', count: 2, time: 350 });
+  });
+
+  it('is empty when there are no pages', () => {
+    expect(buildCategoryBreakdown([])).toEqual([]);
   });
 });

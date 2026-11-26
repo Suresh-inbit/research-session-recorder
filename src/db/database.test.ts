@@ -81,3 +81,39 @@ describe('v1 → v2 migration', () => {
     await Dexie.delete(name);
   });
 });
+
+describe('v2 → v3 migration', () => {
+  it('clamps page times that exceed what real time allows, and keeps sane ones', async () => {
+    const name = 'RepairMigrationTestDB';
+    await Dexie.delete(name);
+
+    const v2 = new Dexie(name);
+    v2.version(1).stores({
+      sessions: 'id, startTime, endTime, isActive',
+      pages: 'id, sessionId, url, type, visitedAt, lastActiveAt, [sessionId+type]',
+      notes: 'id, pageId, sessionId, createdAt, updatedAt, *tags',
+      highlights: 'id, pageId, sessionId, createdAt',
+      questions: 'id, pageId, sessionId, type, status, createdAt',
+      topics: 'id, name, frequency, lastSeen',
+      relationships: 'id, sourceId, targetId, sourceType, targetType, relationType',
+      dailyReports: 'id, date, createdAt',
+      timelineEvents: 'id, sessionId, timestamp, type, entityType',
+    });
+    v2.version(2).stores({ sessions: 'id, startTime, endTime' });
+    await v2.table('sessions').add({ id: 's', startTime: 0, endTime: 3_600_000, duration: 3600, pageCount: 2 });
+    await v2.table('pages').bulkAdd([
+      { id: 'bad', sessionId: 's', url: 'a', visitedAt: 0, lastActiveAt: 600_000, activeTimeSeconds: 300 * 3600 },
+      { id: 'ok', sessionId: 's', url: 'b', visitedAt: 0, lastActiveAt: 600_000, activeTimeSeconds: 120 },
+    ]);
+    v2.close();
+
+    const upgraded = new ResearchDatabase(name);
+    await upgraded.open();
+    expect((await upgraded.pages.get('ok'))?.activeTimeSeconds).toBe(120);
+    const bad = (await upgraded.pages.get('bad'))?.activeTimeSeconds ?? Infinity;
+    expect(bad).toBeLessThanOrEqual(660);
+    expect(bad).toBeGreaterThan(0);
+    upgraded.close();
+    await Dexie.delete(name);
+  });
+});

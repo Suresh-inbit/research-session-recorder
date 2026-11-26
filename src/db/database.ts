@@ -3,6 +3,7 @@
 // ============================================================
 
 import Dexie, { type Table, type Transaction } from 'dexie';
+import { repairActiveTimes } from './repair';
 import type {
   Session,
   Page,
@@ -48,7 +49,18 @@ export class ResearchDatabase extends Dexie {
     this.version(2)
       .stores({ sessions: 'id, startTime, endTime' })
       .upgrade(closeOrphanedSessions);
+
+    // v3: no schema change. Fix page times inflated by the old time tracker (see repair.ts).
+    this.version(3).stores({}).upgrade(repairInflatedActiveTime);
   }
+}
+
+/** Clamp page active times that exceed what real time allows. Idempotent. */
+export async function repairInflatedActiveTime(tx: Transaction): Promise<void> {
+  const sessions = await tx.table<Session, string>('sessions').toArray();
+  const pages = tx.table<Page, string>('pages');
+  const changes = repairActiveTimes(sessions, await pages.toArray());
+  for (const [id, activeTimeSeconds] of changes) await pages.update(id, { activeTimeSeconds });
 }
 
 /** Close sessions still flagged active, ending them at their last known page activity. */

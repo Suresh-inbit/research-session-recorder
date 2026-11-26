@@ -15,7 +15,7 @@ import { db } from '../db/database';
 import { getCurrentSession, getCurrentSessionId, endCurrentSession, startManualSession, initSessionManager } from './session-manager';
 import { generateDailyReport } from './report-generator';
 import { saveHighlight, saveNote, saveQuestion } from './capture';
-import { buildDailyBuckets, computeStreak, startOfDayDaysAgo } from '../services/stats';
+import { buildCategoryBreakdown, buildDailyBuckets, computeStreak, startOfDayDaysAgo } from '../services/stats';
 import { getStartOfDay, formatDate } from '../shared/utils';
 
 export function initMessageHandler(): void {
@@ -243,16 +243,12 @@ async function buildDashboardStats(period: string): Promise<DashboardStats> {
   const visitKeys = await db.pages.where('visitedAt').aboveOrEqual(startOfDayDaysAgo(364, now)).keys();
   const streak = computeStreak(new Set(visitKeys.map((k) => formatDate(Number(k)))), now);
 
-  const categoryBreakdown = ['paper', 'repository', 'documentation', 'video', 'blog', 'forum', 'dataset']
-    .map((type) => {
-      const filtered = pages.filter((p) => p.type === type);
-      return { type, count: filtered.length, time: filtered.reduce((s, p) => s + p.activeTimeSeconds, 0) };
-    })
-    .filter((b) => b.count > 0);
+  const categoryBreakdown = buildCategoryBreakdown(pages);
 
   return {
     totalResearchHours: Math.round(totalHours * 10) / 10,
     totalSessions: sessions.length,
+    totalPages: pages.length,
     totalNotes: noteCount,
     totalHighlights: highlightCount,
     totalQuestions: questionCount,
