@@ -11,7 +11,7 @@ import { highlightRepo } from '../db/repositories/highlight-repo';
 import { questionRepo } from '../db/repositories/question-repo';
 import { topicRepo } from '../db/repositories/topic-repo';
 import { relationshipRepo } from '../db/repositories/relationship-repo';
-import { db } from '../db/database';
+import { db, repairInflatedActiveTimeNow } from '../db/database';
 import { getCurrentSession, getCurrentSessionId, endCurrentSession, startManualSession, initSessionManager } from './session-manager';
 import { generateDailyReport } from './report-generator';
 import { saveHighlight, saveNote, saveQuestion } from './capture';
@@ -122,6 +122,16 @@ async function handleMessage(message: ExtensionMessage): Promise<MessageResponse
     case 'DELETE_HIGHLIGHT': {
       await highlightRepo.delete(message.payload.id);
       return { success: true };
+    }
+
+    case 'REPAIR_TIME': {
+      const pages = await repairInflatedActiveTimeNow();
+      return { success: true, data: { pages } };
+    }
+
+    case 'RESET_TIME': {
+      const pages = await pageRepo.resetActiveTime();
+      return { success: true, data: { pages } };
     }
 
     case 'GET_TIMELINE': {

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Modal } from './Modal';
-import { useSettings } from '../../hooks';
+import { useSettings, useResetTime, useRepairTime } from '../../hooks';
+import { Button } from './Button';
 import { TextArea } from './Input';
 import { normalizeDomain } from '../../shared/url-rules';
 
@@ -20,6 +21,34 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   useEffect(() => {
     setBlockedText((settings?.blockedDomains ?? []).join('\n'));
   }, [settings?.blockedDomains]);
+
+  // Two-step reset: the first click arms it, the second performs it.
+  const { reset: resetTime, resetting } = useResetTime();
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [resetResult, setResetResult] = useState<string | null>(null);
+  const doReset = async () => {
+    const pages = await resetTime();
+    setConfirmReset(false);
+    setResetResult(pages === null ? 'Could not reset time. Try again.' : `Time reset on ${pages} ${pages === 1 ? 'page' : 'pages'}.`);
+  };
+  const { reset: repairTime, resetting: repairing } = useRepairTime();
+  const doRepair = async () => {
+    setConfirmReset(false);
+    const pages = await repairTime();
+    setResetResult(
+      pages === null
+        ? 'Could not repair time. Try again.'
+        : pages === 0
+          ? 'Nothing to fix: all recorded times are plausible.'
+          : `Fixed unrealistic time on ${pages} ${pages === 1 ? 'page' : 'pages'}.`
+    );
+  };
+  useEffect(() => {
+    if (!isOpen) {
+      setConfirmReset(false);
+      setResetResult(null);
+    }
+  }, [isOpen]);
 
   const saveBlocked = () => {
     const domains = blockedText.split(/[\s,]+/).map(normalizeDomain).filter(Boolean);
@@ -160,6 +189,64 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             placeholder={'mybank.com\nintranet.example.com'}
             rows={3}
           />
+        </div>
+
+        {/* Reset tracked time */}
+        <div
+          style={{
+            padding: '14px 16px',
+            background: 'var(--bg-tertiary)',
+            border: '1px solid var(--border-default)',
+            borderRadius: 'var(--radius-lg)',
+          }}
+        >
+          <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '2px' }}>
+            Tracked time
+          </div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', lineHeight: 1.4, marginBottom: '10px' }}>
+            <b>Repair</b> caps times that are longer than real time allows (left by older versions) and keeps the
+            rest. <b>Reset</b> sets every page's recorded time to zero. Pages, sessions, notes and highlights are
+            kept either way; reset cannot be undone.
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<i className="fi fi-rr-wrench-simple" />}
+              loading={repairing}
+              disabled={resetting || confirmReset}
+              onClick={doRepair}
+            >
+              Repair time
+            </Button>
+            {confirmReset ? (
+              <>
+                <Button variant="danger" size="sm" loading={resetting} onClick={doReset}>
+                  Yes, reset all time
+                </Button>
+                <Button variant="ghost" size="sm" disabled={resetting} onClick={() => setConfirmReset(false)}>
+                  Cancel
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={<i className="fi fi-rr-rotate-right" />}
+                onClick={() => {
+                  setResetResult(null);
+                  setConfirmReset(true);
+                }}
+              >
+                Reset time
+              </Button>
+            )}
+            {resetResult && (
+              <span role="status" style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)' }}>
+                {resetResult}
+              </span>
+            )}
+          </div>
         </div>
 
         <div style={{ padding: '8px 4px', fontSize: 'var(--text-xs)', color: 'var(--text-muted)', textAlign: 'center' }}>

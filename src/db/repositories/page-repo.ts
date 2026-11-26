@@ -58,6 +58,11 @@ export const pageRepo = {
     await db.pages.update(id, changes);
   },
 
+  /** Zero the recorded active time of every page; returns how many pages were changed. */
+  async resetActiveTime(): Promise<number> {
+    return db.pages.filter((p) => p.activeTimeSeconds > 0).modify({ activeTimeSeconds: 0 });
+  },
+
   async incrementActiveTime(id: string, seconds: number): Promise<void> {
     // modify() runs read+write in one transaction, so concurrent increments don't lose updates.
     await db.pages

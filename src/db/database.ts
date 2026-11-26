@@ -55,12 +55,18 @@ export class ResearchDatabase extends Dexie {
   }
 }
 
-/** Clamp page active times that exceed what real time allows. Idempotent. */
-export async function repairInflatedActiveTime(tx: Transaction): Promise<void> {
+/** Clamp page active times that exceed what real time allows. Idempotent. Returns pages changed. */
+export async function repairInflatedActiveTime(tx: Transaction): Promise<number> {
   const sessions = await tx.table<Session, string>('sessions').toArray();
   const pages = tx.table<Page, string>('pages');
   const changes = repairActiveTimes(sessions, await pages.toArray());
   for (const [id, activeTimeSeconds] of changes) await pages.update(id, { activeTimeSeconds });
+  return changes.size;
+}
+
+/** Run the same repair on demand (Settings → Repair), outside a version upgrade. */
+export function repairInflatedActiveTimeNow(): Promise<number> {
+  return db.transaction('rw', db.sessions, db.pages, (tx) => repairInflatedActiveTime(tx));
 }
 
 /** Close sessions still flagged active, ending them at their last known page activity. */

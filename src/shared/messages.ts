@@ -136,6 +136,14 @@ export interface DeleteHighlightMessage {
   payload: { id: string };
 }
 
+export interface RepairTimeMessage {
+  type: 'REPAIR_TIME';
+}
+
+export interface ResetTimeMessage {
+  type: 'RESET_TIME';
+}
+
 export interface GetTimelineMessage {
   type: 'GET_TIMELINE';
   payload?: {
@@ -201,6 +209,8 @@ export type ExtensionMessage =
   | UpdateQuestionMessage
   | DeleteQuestionMessage
   | DeleteHighlightMessage
+  | ResetTimeMessage
+  | RepairTimeMessage
   | GetTimelineMessage
   | GetDailyReportMessage
   | GetStatsMessage

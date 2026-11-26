@@ -4,6 +4,9 @@ import { useState, useEffect, useCallback } from 'react';
 import type { Session, Note, Highlight, Question, Page, Topic, DailyReport, TimelineEvent } from '../shared/types';
 import type { StatsData, DashboardStats, GraphData } from '../shared/messages';
 
+/** Dispatched on `window` after an action changes stored data; data hooks refetch when they see it. */
+export const DATA_CHANGED_EVENT = 'rsr:data-changed';
+
 function useSendMessage<T>(type: string, payload?: unknown, autoFetch = true) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(autoFetch);
@@ -30,6 +33,14 @@ function useSendMessage<T>(type: string, payload?: unknown, autoFetch = true) {
 
   useEffect(() => {
     if (autoFetch) fetch();
+  }, [fetch, autoFetch]);
+
+  // Lets an action elsewhere on the page (e.g. "Reset time" in Settings) refresh every list.
+  useEffect(() => {
+    if (!autoFetch) return;
+    const onChanged = () => void fetch();
+    window.addEventListener(DATA_CHANGED_EVENT, onChanged);
+    return () => window.removeEventListener(DATA_CHANGED_EVENT, onChanged);
   }, [fetch, autoFetch]);
 
   return { data, loading, error, refetch: fetch, setData };
@@ -114,6 +125,28 @@ export function useTheme() {
 }
 
 // Action hooks
+function useTimeAction(type: 'RESET_TIME' | 'REPAIR_TIME') {
+  const [resetting, setResetting] = useState(false);
+  /** Returns the number of pages changed, or null on failure. */
+  const reset = async (): Promise<number | null> => {
+    setResetting(true);
+    try {
+      const res = await chrome.runtime.sendMessage({ type });
+      if (!res?.success) return null;
+      window.dispatchEvent(new Event(DATA_CHANGED_EVENT));
+      return res.data.pages as number;
+    } catch {
+      return null;
+    } finally {
+      setResetting(false);
+    }
+  };
+  return { reset, resetting };
+}
+
+export const useResetTime = () => useTimeAction('RESET_TIME');
+export const useRepairTime = () => useTimeAction('REPAIR_TIME');
+
 export function useSaveNote() {
   const [saving, setSaving] = useState(false);
   const save = async (content: string, url?: string, pageTitle?: string, tags?: string[]) => {

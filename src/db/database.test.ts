@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import Dexie from 'dexie';
-import { ResearchDatabase } from './database';
+import { ResearchDatabase, repairInflatedActiveTimeNow } from './database';
 import { sessionRepo } from './repositories/session-repo';
 import { pageRepo } from './repositories/page-repo';
 import { db } from './database';
@@ -44,6 +44,42 @@ describe('pageRepo.incrementActiveTime', () => {
     });
     await Promise.all(Array.from({ length: 20 }, () => pageRepo.incrementActiveTime(page.id, 5)));
     expect((await pageRepo.getById(page.id))?.activeTimeSeconds).toBe(100);
+  });
+});
+
+describe('pageRepo.resetActiveTime', () => {
+  it('zeroes active time on every page and keeps the pages', async () => {
+    const make = (url: string, activeTimeSeconds: number) =>
+      pageRepo.create({
+        sessionId: 's', url, title: url, type: 'unknown', typeConfidence: 0.5,
+        activeTimeSeconds, visitedAt: 1, lastActiveAt: 1,
+      });
+    const a = await make('https://a.com', 500);
+    const b = await make('https://b.com', 0);
+    const c = await make('https://c.com', 90);
+
+    expect(await pageRepo.resetActiveTime()).toBe(2); // only pages that had time
+    for (const p of [a, b, c]) expect((await pageRepo.getById(p.id))?.activeTimeSeconds).toBe(0);
+    expect(await db.pages.count()).toBe(3);
+  });
+});
+
+describe('repairInflatedActiveTimeNow', () => {
+  it('fixes inflated pages on demand, leaves good ones, and reports the count', async () => {
+    const s = await sessionRepo.create({ startTime: 0 });
+    await sessionRepo.endSession(s.id, 3_600_000);
+    const make = (url: string, activeTimeSeconds: number) =>
+      pageRepo.create({
+        sessionId: s.id, url, title: url, type: 'unknown', typeConfidence: 0.5,
+        activeTimeSeconds, visitedAt: 0, lastActiveAt: 600_000,
+      });
+    const bad = await make('https://bad.com', 300 * 3600);
+    const ok = await make('https://ok.com', 120);
+
+    expect(await repairInflatedActiveTimeNow()).toBe(1);
+    expect((await pageRepo.getById(bad.id))?.activeTimeSeconds).toBeLessThanOrEqual(660);
+    expect((await pageRepo.getById(ok.id))?.activeTimeSeconds).toBe(120);
+    expect(await repairInflatedActiveTimeNow()).toBe(0); // idempotent
   });
 });
 
