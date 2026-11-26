@@ -5,7 +5,8 @@ import { Button } from '../ui/Button';
 import { EmptyState } from '../ui/EmptyState';
 import { TextArea, Input } from '../ui/Input';
 import { useNotes, useSaveNote } from '../../hooks';
-import { formatRelativeTime, truncate, openUrl } from '../../shared/utils';
+import { RelativeTime } from '../ui/RelativeTime';
+import { truncate, openUrl } from '../../shared/utils';
 import type { Note } from '../../shared/types';
 
 // ====== NOTES TAB ======
@@ -34,7 +35,7 @@ export const NotesTab: React.FC = () => {
       <div className="page-head">
         <div>
           <h3 style={{ fontSize: 'var(--text-md)', fontWeight: 700, margin: 0 }}>
-            Synthesized Notes ({notes?.length || 0})
+            Notes ({notes?.length || 0})
           </h3>
           <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>
             Captured thoughts, analysis, and paper summaries
@@ -184,7 +185,7 @@ export const NoteItem: React.FC<{ note: Note; onDelete: () => void }> = ({ note,
             </a>
           )}
           <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)' }}>
-            {formatRelativeTime(note.createdAt)}
+            <RelativeTime timestamp={note.createdAt} />
           </span>
         </div>
 

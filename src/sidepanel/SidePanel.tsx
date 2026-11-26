@@ -28,9 +28,9 @@ import {
 const TABS: Tab[] = [
   { id: 'session', label: 'Live', icon: <i className="fi fi-rr-pulse" /> },
   { id: 'notes', label: 'Notes', icon: <i className="fi fi-rr-edit" /> },
-  { id: 'highlights', label: 'Quotes', icon: <i className="fi fi-rr-marker" /> },
+  { id: 'highlights', label: 'Highlights', icon: <i className="fi fi-rr-marker" /> },
   { id: 'questions', label: 'Inquiries', icon: <i className="fi fi-rr-interrogation" /> },
-  { id: 'timeline', label: 'Rail', icon: <i className="fi fi-rr-calendar" /> },
+  { id: 'timeline', label: 'Timeline', icon: <i className="fi fi-rr-calendar" /> },
   { id: 'search', label: 'Search', icon: <i className="fi fi-rr-search" /> },
 ];
 
@@ -52,7 +52,7 @@ export const SidePanel: React.FC = () => {
       <header className="glass-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-secondary)' }}>
         <div className="brand" style={{ gap: '8px' }}>
           <img className="brand__mark brand__mark--sm" src="/icons/icon.svg" alt="" aria-hidden="true" />
-          <span style={{ fontWeight: 800, fontSize: 'var(--text-sm)', letterSpacing: '-0.01em' }}>Observatory</span>
+          <span style={{ fontWeight: 800, fontSize: 'var(--text-sm)', letterSpacing: '-0.01em' }}>Research Session Recorder</span>
         </div>
 
         <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>

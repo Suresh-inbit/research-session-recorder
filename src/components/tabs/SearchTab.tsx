@@ -4,7 +4,8 @@ import { Badge } from '../ui/Badge';
 import { EmptyState } from '../ui/EmptyState';
 import { SearchBar } from '../ui/SearchBar';
 import { useNotes, useHighlights, useQuestions, usePages } from '../../hooks';
-import { formatRelativeTime, truncate, openUrl } from '../../shared/utils';
+import { RelativeTime } from '../ui/RelativeTime';
+import { truncate, openUrl } from '../../shared/utils';
 import Fuse from 'fuse.js';
 
 // ====== FUZZY SEARCH TAB ======
@@ -73,7 +74,7 @@ export const SearchTab: React.FC = () => {
                     {truncate(item.title, 80)}
                   </div>
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px', fontFamily: 'var(--font-mono)' }}>
-                    {formatRelativeTime(item.timestamp)}
+                    <RelativeTime timestamp={item.timestamp} />
                   </div>
                 </div>
                 <Badge size="xs" mono>{item.type.toUpperCase()}</Badge>

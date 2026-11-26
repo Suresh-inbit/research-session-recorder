@@ -67,10 +67,9 @@ export const Dashboard: React.FC = () => {
           <img className="brand__mark" src="/icons/icon.svg" alt="" aria-hidden="true" />
           <div style={{ minWidth: 0 }}>
             <h1 className="brand__title">
-              Observatory
-              <span className="chip-pro">PRO</span>
+              Research Session Recorder
             </h1>
-            <p className="brand__tagline">Research Session Recorder & Knowledge Synthesis</p>
+            <p className="brand__tagline">Sessions, notes and knowledge graph</p>
           </div>
         </div>
 

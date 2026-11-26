@@ -167,7 +167,8 @@
   user-select: none;
   transition: background var(--transition-fast), color var(--transition-fast);
 }
-.tabs--compact .tab { padding: 4px 9px; gap: 5px; }
+.tabs--compact { gap: 2px; }
+.tabs--compact .tab { padding: 4px 7px; gap: 4px; font-size: var(--text-xs); }
 /* Narrow side panel: only the active tab keeps its icon so all six fit without scrolling. */
 .tabs--compact .tab:not([aria-selected='true']) .tab__icon { display: none; }
 .tab:hover:not([aria-selected='true']) { background: var(--bg-hover); color: var(--text-primary); }
@@ -265,16 +266,6 @@
 .brand__mark--sm { width: 26px; height: 26px; border-radius: 7px; box-shadow: none; }
 .brand__title { display: flex; align-items: center; gap: 8px; font-size: var(--text-lg); font-weight: 800; letter-spacing: -0.02em; }
 .brand__tagline { font-size: var(--text-xs); color: var(--text-tertiary); font-weight: 500; }
-.chip-pro {
-  padding: 2px 7px;
-  border-radius: var(--radius-full);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  background: var(--accent-primary-subtle);
-  color: var(--accent-primary);
-  border: 1px solid var(--border-subtle);
-}
 
 /* ---------- Session pill (live timer) ---------- */
 .session-pill {

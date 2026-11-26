@@ -25,7 +25,7 @@ export const ReportTab: React.FC = () => {
       <Card padding="28px" variant="glass">
         <div className="page-head" style={{ marginBottom: '24px' }}>
           <div>
-            <h2 className="page-head__title">Daily Investigation Brief</h2>
+            <h2 className="page-head__title">Daily Brief</h2>
             <span className="section-head__sub">Synthesized research report</span>
           </div>
           <Badge size="md" mono color="var(--accent-primary)">{report.date}</Badge>

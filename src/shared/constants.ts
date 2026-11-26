@@ -89,7 +89,7 @@ export const PAGE_TYPE_LABELS: Record<import('./types').PageType, string> = {
   blog: 'Blog Post',
   forum: 'Discussion',
   dataset: 'Dataset',
-  unknown: 'Page',
+  unknown: 'Other',
 };
 
 /** Page type icons (Flaticon classes) */

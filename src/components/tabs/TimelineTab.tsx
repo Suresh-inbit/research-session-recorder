@@ -21,7 +21,7 @@ export const TimelineTab: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       <div style={{ marginBottom: '10px' }}>
         <h3 style={{ fontSize: 'var(--text-md)', fontWeight: 700, margin: 0 }}>
-          Investigation Rail
+          Timeline
         </h3>
         <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>
           Chronological trail of browser visits, notes, highlights, and milestones

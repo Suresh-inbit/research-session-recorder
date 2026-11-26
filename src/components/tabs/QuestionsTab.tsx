@@ -5,7 +5,7 @@ import { Button } from '../ui/Button';
 import { EmptyState } from '../ui/EmptyState';
 import { TextArea, Input } from '../ui/Input';
 import { useQuestions, useSaveQuestion } from '../../hooks';
-import { formatRelativeTime } from '../../shared/utils';
+import { RelativeTime } from '../ui/RelativeTime';
 import { tint } from '../../shared/color';
 
 // ====== INQUIRIES & QUESTIONS TAB ======
@@ -37,7 +37,7 @@ export const QuestionsTab: React.FC = () => {
       <div className="page-head">
         <div>
           <h3 style={{ fontSize: 'var(--text-md)', fontWeight: 700, margin: 0 }}>
-            Research Inquiries & Hypotheses ({questions?.length || 0})
+            Inquiries ({questions?.length || 0})
           </h3>
           <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>
             Track hypotheses, open doubts, and emergent thoughts
@@ -176,7 +176,7 @@ export const QuestionsTab: React.FC = () => {
                         {q.status.toUpperCase()}
                       </Badge>
                       <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-                        {formatRelativeTime(q.createdAt)}
+                        <RelativeTime timestamp={q.createdAt} />
                       </span>
                     </div>
                   </div>

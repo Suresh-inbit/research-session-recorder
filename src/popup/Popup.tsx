@@ -35,7 +35,7 @@ export const Popup: React.FC = () => {
     { icon: <i className="fi fi-rr-code-branch" />, label: 'Repos', value: stats?.todayRepos || 0, color: 'var(--color-repository)' },
     { icon: <i className="fi fi-rr-play-alt" />, label: 'Videos', value: stats?.todayVideos || 0, color: 'var(--color-video)' },
     { icon: <i className="fi fi-rr-edit" />, label: 'Notes', value: stats?.todayNotes || 0, color: 'var(--accent-amber)' },
-    { icon: <i className="fi fi-rr-marker" />, label: 'Passages', value: stats?.todayHighlights || 0, color: 'var(--accent-primary)' },
+    { icon: <i className="fi fi-rr-marker" />, label: 'Highlights', value: stats?.todayHighlights || 0, color: 'var(--accent-primary)' },
     { icon: <i className="fi fi-rr-interrogation" />, label: 'Inquiries', value: stats?.todayQuestions || 0, color: 'var(--accent-rose)' },
   ];
 
@@ -63,7 +63,7 @@ export const Popup: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <img className="brand__mark brand__mark--sm" src="/icons/icon.svg" alt="" aria-hidden="true" style={{ boxShadow: '0 0 0 1.5px rgba(255, 255, 255, 0.45)' }} />
             <span style={{ fontWeight: 800, fontSize: 'var(--text-sm)', letterSpacing: '-0.01em' }}>
-              Observatory
+              Research Session Recorder
             </span>
           </div>
 

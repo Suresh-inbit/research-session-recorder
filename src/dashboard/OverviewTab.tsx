@@ -51,16 +51,16 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ stats, loading, period
       bgSubtle: 'var(--warning-subtle)',
     },
     {
-      label: 'Passages Saved',
+      label: 'Highlights',
       value: stats.totalHighlights,
-      sub: 'High-signal quotes',
+      sub: 'Saved passages',
       icon: 'fi fi-rr-marker',
       color: 'var(--color-paper)',
       bgSubtle: 'var(--accent-primary-subtle)',
     },
     {
       label: 'Pages Traversed',
-      value: stats.categoryBreakdown.reduce((acc, c) => acc + c.count, 0),
+      value: stats.totalPages,
       sub: 'Papers & sources',
       icon: 'fi fi-rr-browser',
       color: 'var(--success)',
@@ -85,7 +85,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ stats, loading, period
     <div className="stack stack--lg animate-fade-in">
       <div className="page-head">
         <div>
-          <h2 className="page-head__title">Telemetry & Velocity</h2>
+          <h2 className="page-head__title">Overview</h2>
           <p className="page-head__sub">Analysis of your investigation patterns and knowledge artifacts</p>
         </div>
 

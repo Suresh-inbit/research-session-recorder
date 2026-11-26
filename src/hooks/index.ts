@@ -85,16 +85,28 @@ export function useDashboardStats(period: 'week' | 'month' | 'all' = 'week') {
   return useSendMessage<DashboardStats>('GET_DASHBOARD_STATS', { period });
 }
 
+const THEME_KEY = 'rsr-theme';
+
 export function useTheme() {
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     try {
-      return (localStorage.getItem('rsr-theme') as 'dark' | 'light') || 'dark';
+      return (localStorage.getItem(THEME_KEY) as 'dark' | 'light') || 'dark';
     } catch { return 'dark'; }
   });
 
+  // The popup, side panel and dashboard share one origin (and so one localStorage), but each is a
+  // separate document. `storage` fires in the *other* documents, which keeps open views in sync.
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === THEME_KEY && (e.newValue === 'dark' || e.newValue === 'light')) setTheme(e.newValue);
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
-    try { localStorage.setItem('rsr-theme', theme); } catch {}
+    try { localStorage.setItem(THEME_KEY, theme); } catch {}
   }, [theme]);
 
   const toggle = () => setTheme(t => t === 'dark' ? 'light' : 'dark');

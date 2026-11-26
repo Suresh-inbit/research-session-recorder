@@ -2,7 +2,8 @@ import React from 'react';
 import { Card } from '../ui/Card';
 import { EmptyState } from '../ui/EmptyState';
 import { useHighlights } from '../../hooks';
-import { formatRelativeTime, openUrl } from '../../shared/utils';
+import { RelativeTime } from '../ui/RelativeTime';
+import { openUrl } from '../../shared/utils';
 
 // ====== HIGHLIGHTS TAB ======
 export const HighlightsTab: React.FC = () => {
@@ -12,10 +13,10 @@ export const HighlightsTab: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
       <div>
         <h3 style={{ fontSize: 'var(--text-md)', fontWeight: 700, margin: 0 }}>
-          Saved Passages & Quotes ({highlights?.length || 0})
+          Highlights ({highlights?.length || 0})
         </h3>
         <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>
-          High-signal quotes captured directly from papers, repos, and documentation
+          Passages you saved from papers, repos and documentation
         </span>
       </div>
 
@@ -80,7 +81,7 @@ export const HighlightsTab: React.FC = () => {
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <span style={{ fontSize: '11px', color: 'var(--text-tertiary)', fontFamily: 'var(--font-mono)' }}>
-                    {formatRelativeTime(h.createdAt)}
+                    <RelativeTime timestamp={h.createdAt} />
                   </span>
                   <button
                     type="button"
@@ -104,7 +105,7 @@ export const HighlightsTab: React.FC = () => {
       {(!highlights || highlights.length === 0) && (
         <EmptyState
           icon={<i className="fi fi-rr-marker" />}
-          title="No Passages Highlighted"
+          title="No Highlights Yet"
           description="Highlight text on any arXiv paper or web page, then click 'Save to Research' to catalog key passages."
         />
       )}
