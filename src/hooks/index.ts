@@ -127,16 +127,20 @@ export function useTheme() {
 // Action hooks
 function useTimeAction(type: 'RESET_TIME' | 'REPAIR_TIME') {
   const [resetting, setResetting] = useState(false);
-  /** Returns the number of pages changed, or null on failure. */
-  const reset = async (): Promise<number | null> => {
+  /** Resolves with the number of pages changed, or the reason it failed. */
+  const reset = async (): Promise<{ pages: number } | { error: string }> => {
     setResetting(true);
     try {
       const res = await chrome.runtime.sendMessage({ type });
-      if (!res?.success) return null;
+      if (!res?.success) {
+        const why = res?.error ?? 'no response from the extension';
+        // An old background worker doesn't know newer messages — reloading the extension fixes it.
+        return { error: why === 'Unknown message type' ? 'the extension needs to be reloaded' : why };
+      }
       window.dispatchEvent(new Event(DATA_CHANGED_EVENT));
-      return res.data.pages as number;
-    } catch {
-      return null;
+      return { pages: res.data.pages as number };
+    } catch (e) {
+      return { error: e instanceof Error ? e.message : String(e) };
     } finally {
       setResetting(false);
     }

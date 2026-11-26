@@ -27,20 +27,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const [confirmReset, setConfirmReset] = useState(false);
   const [resetResult, setResetResult] = useState<string | null>(null);
   const doReset = async () => {
-    const pages = await resetTime();
+    const res = await resetTime();
     setConfirmReset(false);
-    setResetResult(pages === null ? 'Could not reset time. Try again.' : `Time reset on ${pages} ${pages === 1 ? 'page' : 'pages'}.`);
+    setResetResult(
+      'error' in res ? `Could not reset time: ${res.error}.` : `Time reset on ${res.pages} ${res.pages === 1 ? 'page' : 'pages'}.`
+    );
   };
   const { reset: repairTime, resetting: repairing } = useRepairTime();
   const doRepair = async () => {
     setConfirmReset(false);
-    const pages = await repairTime();
+    const res = await repairTime();
     setResetResult(
-      pages === null
-        ? 'Could not repair time. Try again.'
-        : pages === 0
+      'error' in res
+        ? `Could not repair time: ${res.error}.`
+        : res.pages === 0
           ? 'Nothing to fix: all recorded times are plausible.'
-          : `Fixed unrealistic time on ${pages} ${pages === 1 ? 'page' : 'pages'}.`
+          : `Fixed unrealistic time on ${res.pages} ${res.pages === 1 ? 'page' : 'pages'}.`
     );
   };
   useEffect(() => {
