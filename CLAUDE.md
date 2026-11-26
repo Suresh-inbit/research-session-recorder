@@ -90,7 +90,8 @@ The worker is killed when idle and re-executed from the top. Therefore, in `src/
 - Shortcuts: `Alt+Shift+N` (note), `Alt+Shift+R` (side panel). `Ctrl+Shift+N`/`Ctrl+Shift+R` are reserved by browsers.
 - The toolbar button opens the **popup**; the side panel is opened from it or by shortcut
   (`openPanelOnActionClick` is deliberately `false`).
-- Firefox add-on id in the manifest is a placeholder.
+- Firefox add-on id (`research-session-recorder@suresh-inbit.github.io`) is published on AMO — never change it.
+  The Firefox build declares `data_collection_permissions: none` (nothing leaves the device); revisit if that changes.
 
 ## Git
 

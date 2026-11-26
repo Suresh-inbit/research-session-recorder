@@ -30,12 +30,20 @@ npm run build:chrome      # or build:firefox, or `npm run build` for both
 | Browser | Load it from |
 | --- | --- |
 | Chrome / Edge / Brave | `chrome://extensions` → *Developer mode* → *Load unpacked* → `dist/chrome` |
-| Firefox (121+) | `about:debugging` → *This Firefox* → *Load Temporary Add-on…* → `dist/firefox/manifest.json` |
+| Firefox (140+) | `about:debugging` → *This Firefox* → *Load Temporary Add-on…* → `dist/firefox/manifest.json` |
 
 `npm run dev` does a Chrome build and then rebuilds on change (reload the extension after each rebuild).
 
-> **Before publishing to Firefox**, replace the placeholder add-on id
-> (`research-session-recorder@example.com`) in `public/manifest.json` with your own.
+### Packaging for the stores
+
+```bash
+npm run package:chrome    # dist/research-session-recorder-chrome.zip (Chrome Web Store)
+npm run package:firefox   # dist/research-session-recorder-firefox.zip (addons.mozilla.org)
+npm run package:source    # dist/research-session-recorder-source.zip (AMO asks for source of bundled code)
+```
+
+The Firefox add-on id (`research-session-recorder@suresh-inbit.github.io`) is set in `public/manifest.json`
+and must not change once published.
 
 ### Keyboard shortcuts
 
@@ -127,4 +135,4 @@ time tracker (idle, focus, tab switching, restart). The UI is not covered by aut
 
 ## License
 
-MIT
+[MIT](LICENSE)
