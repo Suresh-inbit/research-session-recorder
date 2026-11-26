@@ -1,28 +1,91 @@
 import React from 'react';
 import type { PageType } from '../../shared/types';
 import { PAGE_TYPE_COLORS } from '../../shared/constants';
+import { tint } from '../../shared/color';
 
 interface BadgeProps {
   children: React.ReactNode;
   color?: string;
-  variant?: 'solid' | 'subtle';
-  size?: 'sm' | 'md';
+  variant?: 'solid' | 'subtle' | 'outline' | 'dot';
+  size?: 'xs' | 'sm' | 'md';
   pageType?: PageType;
+  mono?: boolean;
+  dotPulse?: boolean;
 }
 
-export const Badge: React.FC<BadgeProps> = ({ children, color, variant = 'subtle', size = 'sm', pageType }) => {
+export const Badge: React.FC<BadgeProps> = ({
+  children,
+  color,
+  variant = 'subtle',
+  size = 'sm',
+  pageType,
+  mono = false,
+  dotPulse = false,
+}) => {
   const resolvedColor = pageType ? PAGE_TYPE_COLORS[pageType] : color || 'var(--accent-primary)';
 
-  const styles: React.CSSProperties = {
-    display: 'inline-flex', alignItems: 'center', gap: '4px',
-    padding: size === 'sm' ? '2px 8px' : '4px 10px',
-    borderRadius: 'var(--radius-full)',
-    fontSize: size === 'sm' ? 'var(--text-xs)' : 'var(--text-sm)',
-    fontWeight: 500, whiteSpace: 'nowrap', lineHeight: 1.4,
-    background: variant === 'solid' ? resolvedColor : `${resolvedColor}18`,
-    color: variant === 'solid' ? 'white' : resolvedColor,
-    border: variant === 'subtle' ? `1px solid ${resolvedColor}30` : 'none',
+  const getPadding = () => {
+    if (size === 'xs') return '1px 6px';
+    if (size === 'md') return '4px 12px';
+    return '2.5px 8px';
   };
 
-  return <span style={styles}>{children}</span>;
+  const getFontSize = () => {
+    if (size === 'xs') return '10px';
+    if (size === 'md') return 'var(--text-sm)';
+    return 'var(--text-xs)';
+  };
+
+  const getBackground = () => {
+    if (variant === 'solid') return resolvedColor;
+    if (variant === 'outline') return 'transparent';
+    return tint(resolvedColor, 12);
+  };
+
+  const getBorder = () => {
+    if (variant === 'outline') return `1px solid ${resolvedColor}`;
+    if (variant === 'solid') return 'none';
+    return `1px solid ${tint(resolvedColor, 28)}`;
+  };
+
+  const getTextColor = () => {
+    if (variant === 'solid') return '#ffffff';
+    return resolvedColor;
+  };
+
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '5px',
+        padding: getPadding(),
+        borderRadius: 'var(--radius-full)',
+        fontSize: getFontSize(),
+        fontWeight: 600,
+        fontFamily: mono ? 'var(--font-mono)' : 'var(--font-sans)',
+        whiteSpace: 'nowrap',
+        lineHeight: 1.4,
+        background: getBackground(),
+        color: getTextColor(),
+        border: getBorder(),
+        letterSpacing: mono ? '-0.02em' : '0.01em',
+      }}
+    >
+      {variant === 'dot' && (
+        <span
+          className={dotPulse ? 'animate-breathe' : undefined}
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: '50%',
+            background: resolvedColor,
+            display: 'inline-block',
+          }}
+        />
+      )}
+      {children}
+    </span>
+  );
 };
+

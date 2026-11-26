@@ -1,44 +1,34 @@
-import React, { useState } from 'react';
+import React from 'react';
 
-interface Tab {
+export interface Tab {
   id: string;
   label: string;
-  icon?: string;
+  icon?: React.ReactNode;
+  count?: number;
 }
 
 interface TabsProps {
   tabs: Tab[];
   activeTab: string;
   onTabChange: (tabId: string) => void;
+  variant?: 'pill' | 'underline' | 'compact';
 }
 
-export const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, onTabChange }) => {
-  return (
-    <div style={{
-      display: 'flex', gap: '2px', padding: '3px',
-      background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)',
-      overflow: 'auto', flexShrink: 0,
-    }}>
-      {tabs.map((tab) => (
-        <button
-          key={tab.id}
-          onClick={() => onTabChange(tab.id)}
-          style={{
-            flex: 1, padding: '6px 10px', border: 'none',
-            borderRadius: 'var(--radius-sm)',
-            background: activeTab === tab.id ? 'var(--bg-secondary)' : 'transparent',
-            color: activeTab === tab.id ? 'var(--text-primary)' : 'var(--text-tertiary)',
-            fontSize: 'var(--text-sm)', fontWeight: activeTab === tab.id ? 600 : 400,
-            fontFamily: 'var(--font-sans)', cursor: 'pointer',
-            transition: 'all var(--transition-fast)',
-            boxShadow: activeTab === tab.id ? 'var(--shadow-sm)' : 'none',
-            whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
-          }}
-        >
-          {tab.icon && <span>{tab.icon}</span>}
-          {tab.label}
-        </button>
-      ))}
-    </div>
-  );
-};
+export const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, onTabChange, variant = 'pill' }) => (
+  <div className={`tabs${variant === 'compact' ? ' tabs--compact' : ''}`} role="tablist">
+    {tabs.map((tab) => (
+      <button
+        key={tab.id}
+        type="button"
+        role="tab"
+        aria-selected={activeTab === tab.id}
+        className="tab"
+        onClick={() => onTabChange(tab.id)}
+      >
+        {tab.icon && <span className="tab__icon">{tab.icon}</span>}
+        <span>{tab.label}</span>
+        {typeof tab.count === 'number' && <span className="tab__count">{tab.count}</span>}
+      </button>
+    ))}
+  </div>
+);

@@ -5,29 +5,49 @@ interface CardProps {
   hover?: boolean;
   onClick?: () => void;
   padding?: string;
+  variant?: 'default' | 'glass' | 'elevated' | 'instrument';
+  glow?: boolean;
   style?: React.CSSProperties;
   className?: string;
 }
 
-export const Card: React.FC<CardProps> = ({ children, hover = false, onClick, padding = 'var(--space-4)', style, className }) => {
-  const [isHovered, setIsHovered] = React.useState(false);
+export const Card: React.FC<CardProps> = ({
+  children,
+  hover = false,
+  onClick,
+  padding = 'var(--space-4)',
+  variant = 'default',
+  glow = false,
+  style,
+  className,
+}) => {
+  const classes = [
+    'card',
+    variant !== 'default' && `card--${variant}`,
+    hover && 'card--hover',
+    hover && glow && 'card--glow',
+    onClick && 'card--clickable',
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
     <div
-      className={className}
+      className={classes}
+      style={{ padding, ...style }}
       onClick={onClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      style={{
-        background: isHovered && hover ? 'var(--bg-hover)' : 'var(--bg-secondary)',
-        border: '1px solid var(--border-subtle)',
-        borderRadius: 'var(--radius-lg)',
-        padding,
-        transition: 'all var(--transition-fast)',
-        cursor: onClick ? 'pointer' : 'default',
-        boxShadow: isHovered && hover ? 'var(--shadow-md)' : 'none',
-        ...style,
-      }}
+      // Clickable cards must be reachable and operable from the keyboard too.
+      {...(onClick && {
+        role: 'button',
+        tabIndex: 0,
+        onKeyDown: (e: React.KeyboardEvent) => {
+          if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            onClick();
+          }
+        },
+      })}
     >
       {children}
     </div>

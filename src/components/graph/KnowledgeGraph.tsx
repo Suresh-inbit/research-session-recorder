@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect } from 'react';
 import {
   ReactFlow,
   MiniMap,
@@ -7,11 +7,14 @@ import {
   useNodesState,
   useEdgesState,
   Position,
+  type Node,
+  type Edge,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import dagre from 'dagre';
 import type { GraphData } from '../../shared/messages';
 import { PAGE_TYPE_COLORS } from '../../shared/constants';
+import { tint } from '../../shared/color';
 import { Card } from '../ui/Card';
 
 interface KnowledgeGraphProps {
@@ -19,14 +22,13 @@ interface KnowledgeGraphProps {
   loading: boolean;
 }
 
-const getLayoutedElements = (nodes: any[], edges: any[], direction = 'TB') => {
+const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'LR') => {
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
-  dagreGraph.setGraph({ rankdir: direction });
+  dagreGraph.setGraph({ rankdir: direction, nodesep: 30, ranksep: 120 });
 
   nodes.forEach((node) => {
-    // Arbitrary size for the nodes
-    dagreGraph.setNode(node.id, { width: 180, height: 60 });
+    dagreGraph.setNode(node.id, { width: 200, height: 68 });
   });
 
   edges.forEach((edge) => {
@@ -39,11 +41,11 @@ const getLayoutedElements = (nodes: any[], edges: any[], direction = 'TB') => {
     const nodeWithPosition = dagreGraph.node(node.id);
     return {
       ...node,
-      targetPosition: direction === 'LEFT-RIGHT' ? Position.Left : Position.Top,
-      sourcePosition: direction === 'LEFT-RIGHT' ? Position.Right : Position.Bottom,
+      targetPosition: direction === 'LR' ? Position.Left : Position.Top,
+      sourcePosition: direction === 'LR' ? Position.Right : Position.Bottom,
       position: {
-        x: nodeWithPosition.x - 90,
-        y: nodeWithPosition.y - 30,
+        x: (nodeWithPosition?.x || 0) - 100,
+        y: (nodeWithPosition?.y || 0) - 34,
       },
     };
   });
@@ -52,60 +54,72 @@ const getLayoutedElements = (nodes: any[], edges: any[], direction = 'TB') => {
 };
 
 export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ data, loading }) => {
-  const [nodes, setNodes, onNodesChange] = useNodesState<any>([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<any>([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
   useEffect(() => {
     if (!data) return;
 
-    // Build React Flow nodes
+    // Custom Laboratory Chip Nodes
     const rawNodes = data.nodes.map((n) => {
       const color = PAGE_TYPE_COLORS[n.type as keyof typeof PAGE_TYPE_COLORS] || 'var(--accent-primary)';
       return {
         id: n.id,
         data: {
           label: (
-            <div style={{
-              padding: '8px 12px',
-              borderRadius: 'var(--radius-md)',
-              background: 'var(--bg-secondary)',
-              border: `1px solid ${color}`,
-              color: 'var(--text-primary)',
-              fontSize: '11px',
-              fontWeight: 500,
-              width: '180px',
-              textAlign: 'center',
-              boxShadow: 'var(--shadow-sm)',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}>
-              <div style={{
-                fontSize: '9px',
-                textTransform: 'uppercase',
-                color,
+            <div
+              style={{
+                padding: '10px 14px',
+                borderRadius: 'var(--radius-md)',
+                background: 'var(--bg-tertiary)',
+                border: `1px solid ${tint(color, 40)}`,
+                borderLeft: `4px solid ${color}`,
+                color: 'var(--text-primary)',
+                fontSize: '11.5px',
                 fontWeight: 600,
-                marginBottom: '2px',
-              }}>
+                width: '190px',
+                boxShadow: 'var(--shadow-md)',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                transition: 'all var(--transition-fast)',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: '9px',
+                  textTransform: 'uppercase',
+                  color,
+                  fontWeight: 800,
+                  letterSpacing: '0.05em',
+                  marginBottom: '3px',
+                  fontFamily: 'var(--font-mono)',
+                }}
+              >
                 {n.type}
               </div>
-              {n.label}
+              <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {n.label}
+              </div>
             </div>
-          )
+          ),
         },
         position: { x: 0, y: 0 },
       };
     });
 
-    // Build React Flow edges
+    // Custom Edge telemetry paths
     const rawEdges = data.edges.map((e) => ({
       id: e.id,
       source: e.source,
       target: e.target,
       label: e.label,
       animated: true,
-      style: { stroke: 'var(--border-strong)', strokeWidth: 1.5 },
-      labelStyle: { fill: 'var(--text-tertiary)', fontSize: 9, fontWeight: 500 },
+      style: { strokeWidth: 2 },
+      labelStyle: { fontSize: 10, fontWeight: 600, fontFamily: 'var(--font-mono)' },
+      labelBgStyle: { fillOpacity: 0.9 },
+      labelBgPadding: [4, 2] as [number, number],
+      labelBgBorderRadius: 4,
     }));
 
     const layouted = getLayoutedElements(rawNodes, rawEdges, 'LR');
@@ -115,57 +129,93 @@ export const KnowledgeGraph: React.FC<KnowledgeGraphProps> = ({ data, loading })
 
   if (loading) {
     return (
-      <div style={{ height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)' }} className="shimmer-loading">
-        <span style={{ color: 'var(--text-secondary)' }}>Loading Knowledge Graph...</span>
+      <div
+        style={{
+          height: '600px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'var(--bg-secondary)',
+          borderRadius: 'var(--radius-xl)',
+          border: '1px solid var(--border-subtle)',
+        }}
+        className="shimmer-loading"
+      >
+        <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>Synthesizing Knowledge Topology...</span>
       </div>
     );
   }
 
   if (!data || data.nodes.length === 0) {
     return (
-      <div style={{ height: '400px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-secondary)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)' }}>
-        <span style={{ color: 'var(--text-tertiary)', fontSize: 'var(--text-sm)' }}>
-          No research relationships tracked yet. Add notes or topics to build the graph.
-        </span>
+      <div
+        style={{
+          height: '550px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'var(--bg-secondary)',
+          borderRadius: 'var(--radius-xl)',
+          border: '1px solid var(--border-subtle)',
+        }}
+      >
+        <div style={{ textAlign: 'center', maxWidth: '360px', padding: '24px' }}>
+          <div style={{ fontSize: '32px', marginBottom: '12px', color: 'var(--accent-primary)' }}>
+            <i className="fi fi-rr-diagram-project" />
+          </div>
+          <h4 style={{ fontSize: 'var(--text-md)', fontWeight: 700, margin: '0 0 6px 0' }}>
+            Knowledge Topology Uninitialized
+          </h4>
+          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', margin: 0, lineHeight: 1.5 }}>
+            As you browse interconnected papers, GitHub repos, and write tagged notes, your interactive concept map will form automatically here.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <Card padding="0" style={{ height: '500px', overflow: 'hidden', border: '1px solid var(--border-default)' }}>
+    <Card padding="0" variant="glass" style={{ height: '640px', overflow: 'hidden', border: '1px solid var(--border-default)' }}>
       <div style={{ height: '100%', width: '100%', position: 'relative' }}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
+          className="kg"
           fitView
+          fitViewOptions={{ maxZoom: 1.1, padding: 0.15 }}
+          nodesConnectable={false}
           attributionPosition="bottom-right"
         >
-          <Controls style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-default)', color: 'var(--text-primary)' }} />
-          <MiniMap
-            style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-default)' }}
-            nodeColor={(node) => 'var(--accent-primary)'}
-            maskColor="rgba(0, 0, 0, 0.4)"
-          />
-          <Background color="var(--border-strong)" gap={16} size={1} />
+          <Controls showInteractive={false} />
+          <MiniMap pannable zoomable />
+          <Background color="var(--border-subtle)" gap={20} size={1} />
         </ReactFlow>
-        <div style={{
-          position: 'absolute',
-          top: '12px',
-          left: '12px',
-          background: 'rgba(26, 29, 39, 0.85)',
-          padding: '6px 12px',
-          borderRadius: 'var(--radius-sm)',
-          fontSize: '11px',
-          color: 'var(--text-secondary)',
-          zIndex: 4,
-          backdropFilter: 'blur(4px)',
-          border: '1px solid var(--border-subtle)',
-        }}>
-          💡 Drag nodes to reorganize. Zoom with scroll.
+
+        {/* Floating Observatory HUD Tip */}
+        <div
+          className="glass-panel"
+          style={{
+            position: 'absolute',
+            top: '16px',
+            left: '16px',
+            padding: '8px 14px',
+            borderRadius: 'var(--radius-md)',
+            fontSize: '11px',
+            color: 'var(--text-secondary)',
+            zIndex: 4,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            boxShadow: 'var(--shadow-sm)',
+          }}
+        >
+          <i className="fi fi-rr-bulb" style={{ color: 'var(--accent-secondary)' }} />
+          <span>Interactive topology: Drag nodes to arrange · Scroll to zoom · Click to inspect</span>
         </div>
       </div>
     </Card>
   );
 };
+

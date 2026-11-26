@@ -4,26 +4,29 @@ import { useState, useEffect, useCallback } from 'react';
 import type { Session, Note, Highlight, Question, Page, Topic, DailyReport, TimelineEvent } from '../shared/types';
 import type { StatsData, DashboardStats, GraphData } from '../shared/messages';
 
-function useSendMessage<T>(type: string, payload?: any, autoFetch = true) {
+function useSendMessage<T>(type: string, payload?: unknown, autoFetch = true) {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(autoFetch);
   const [error, setError] = useState<string | null>(null);
 
-  const fetch = useCallback(async (overridePayload?: any) => {
+  // Serialised so callers can pass inline object literals without retriggering the fetch.
+  const payloadKey = JSON.stringify(payload);
+
+  const fetch = useCallback(async (overridePayload?: unknown) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await chrome.runtime.sendMessage({ type, payload: overridePayload || payload });
+      const response = await chrome.runtime.sendMessage({ type, payload: overridePayload ?? (payloadKey === undefined ? undefined : JSON.parse(payloadKey)) });
       if (response?.success) {
         setData(response.data);
       } else {
         setError(response?.error || 'Unknown error');
       }
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
     }
     setLoading(false);
-  }, [type, JSON.stringify(payload)]);
+  }, [type, payloadKey]);
 
   useEffect(() => {
     if (autoFetch) fetch();
@@ -55,6 +58,8 @@ export function useHighlights(sessionId?: string) {
 export function useQuestions(sessionId?: string, status?: string) {
   return useSendMessage<Question[]>('GET_QUESTIONS', { sessionId, status });
 }
+
+export * from './useSettings';
 
 export function useStats() {
   return useSendMessage<StatsData>('GET_STATS');
@@ -110,10 +115,10 @@ export function useSaveNote() {
 
 export function useSaveQuestion() {
   const [saving, setSaving] = useState(false);
-  const save = async (content: string, qType: string, url?: string, pageTitle?: string) => {
+  const save = async (content: string, qType: string, url?: string, pageTitle?: string, description?: string) => {
     setSaving(true);
     try {
-      await chrome.runtime.sendMessage({ type: 'SAVE_QUESTION', payload: { content, type: qType, url, pageTitle } });
+      await chrome.runtime.sendMessage({ type: 'SAVE_QUESTION', payload: { content, description, type: qType, url, pageTitle } });
     } finally { setSaving(false); }
   };
   return { save, saving };
@@ -146,5 +151,11 @@ export function useUpdateQuestion() {
 export function useEndSession() {
   return async () => {
     await chrome.runtime.sendMessage({ type: 'END_SESSION' });
+  };
+}
+
+export function useStartSession() {
+  return async () => {
+    await chrome.runtime.sendMessage({ type: 'START_SESSION' });
   };
 }

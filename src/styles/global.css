@@ -1,9 +1,12 @@
 /* ============================================================
-   Global Styles — Reset & Base
+   Global Styles — Scientific Observatory Reset & Base
    ============================================================ */
 
+@import './fonts.css';
 @import './design-tokens.css';
 @import './animations.css';
+@import './components.css';
+@import '@flaticon/flaticon-uicons/css/regular/rounded.css';
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -21,6 +24,7 @@ html, body {
   background: var(--bg-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 #root {
@@ -30,24 +34,45 @@ html, body {
   flex-direction: column;
 }
 
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
 a {
   color: var(--accent-secondary);
   text-decoration: none;
-  transition: color var(--transition-fast);
+  transition: color var(--transition-fast), opacity var(--transition-fast);
 }
-a:hover { color: var(--accent-primary); }
+a:hover {
+  color: var(--accent-primary);
+}
 
-button { cursor: pointer; font-family: inherit; }
-input, textarea, select { font-family: inherit; }
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+input, textarea, select {
+  font-family: inherit;
+}
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
+/* Observatory Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+}
 ::-webkit-scrollbar-thumb {
   background: var(--border-strong);
   border-radius: var(--radius-full);
+  transition: background var(--transition-fast);
 }
-::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
 
 /* Selection */
 ::selection {
@@ -63,6 +88,10 @@ input, textarea, select { font-family: inherit; }
 }
 
 /* Typography utilities */
+.font-display { font-family: var(--font-display); }
+.font-sans { font-family: var(--font-sans); }
+.font-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
 .text-xs { font-size: var(--text-xs); }
 .text-sm { font-size: var(--text-sm); }
 .text-base { font-size: var(--text-base); }
@@ -75,14 +104,38 @@ input, textarea, select { font-family: inherit; }
 .text-primary { color: var(--text-primary); }
 .text-secondary { color: var(--text-secondary); }
 .text-tertiary { color: var(--text-tertiary); }
+.text-muted { color: var(--text-muted); }
 
 .font-medium { font-weight: 500; }
 .font-semibold { font-weight: 600; }
 .font-bold { font-weight: 700; }
-.font-mono { font-family: var(--font-mono); }
+.font-extrabold { font-weight: 800; }
 
 .truncate {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Glass & Panel Utilities */
+.glass-panel {
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+}
+
+.glow-card {
+  position: relative;
+  transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+}
+.glow-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md), 0 0 16px var(--accent-primary-subtle);
+  border-color: var(--border-strong);
+}
+
+.badge-glow {
+  box-shadow: 0 0 8px currentColor;
+}
+

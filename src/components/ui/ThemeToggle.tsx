@@ -3,22 +3,22 @@ import React from 'react';
 interface ThemeToggleProps {
   theme: 'dark' | 'light';
   onToggle: () => void;
+  /** Visual treatment: default bordered button, or white-on-accent for the popup header. */
+  tone?: 'default' | 'on-accent' | 'bare';
 }
 
-export const ThemeToggle: React.FC<ThemeToggleProps> = ({ theme, onToggle }) => {
+export const ThemeToggle: React.FC<ThemeToggleProps> = ({ theme, onToggle, tone = 'default' }) => {
+  const next = theme === 'dark' ? 'light' : 'dark';
+  const toneClass = tone === 'on-accent' ? 'icon-btn--on-accent' : tone === 'bare' ? 'icon-btn--bare' : theme === 'dark' ? 'icon-btn--sun' : 'icon-btn--moon';
   return (
     <button
+      type="button"
       onClick={onToggle}
-      aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-      style={{
-        background: 'var(--bg-tertiary)', border: '1px solid var(--border-default)',
-        borderRadius: 'var(--radius-md)', padding: '6px 8px',
-        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: 'var(--text-secondary)', fontSize: '16px',
-        transition: 'all var(--transition-fast)',
-      }}
+      className={`icon-btn ${toneClass}`}
+      aria-label={`Switch to ${next} mode`}
+      title={`Switch to ${next} mode`}
     >
-      {theme === 'dark' ? '☀️' : '🌙'}
+      <i className={theme === 'dark' ? 'fi fi-rr-sun' : 'fi fi-rr-moon'} />
     </button>
   );
 };
